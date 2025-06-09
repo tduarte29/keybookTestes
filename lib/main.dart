@@ -137,7 +137,10 @@ class _HomePageState extends State<HomePage> {
                       hintStyle: TextStyle(color: Colors.grey),
                       filled: true,
                       fillColor: Colors.grey.shade800,
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 12.0,
                         vertical: 8.0,
@@ -150,12 +153,15 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(width: 8.0),
 
                 Container(
-                  padding: EdgeInsets.all(8.0),
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade800,
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  child: Icon(Icons.filter_alt_sharp, color: Colors.white),
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Icon(Icons.filter_alt_sharp, color: Colors.white),
+                  ),
                 ),
               ],
             ),
