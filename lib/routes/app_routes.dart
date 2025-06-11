@@ -10,5 +10,6 @@ class AppRoutes {
     '/register': (context) => const RegisterScreen(),
     '/home': (context) => const KeyListScreen(),
     '/keys': (context) => const KeyListScreen(),
+    // '/profile': (context) => const ProfileScreen(),
   };
 }

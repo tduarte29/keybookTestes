@@ -296,7 +296,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                                       Navigator.pop(context);
                                     }
                                   },
-                                  child: Text('OK', style: GoogleFonts.inter(color: Colors.white)),
+                                  child: Text('OK', style: GoogleFonts.inter(color: Colors.grey.shade900)),
                                 ),
                               ],
                             ),
