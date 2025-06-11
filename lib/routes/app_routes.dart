@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
-import '../screens/home_screen.dart';
-import '../screens/key_list_screen.dart';
+import '../main.dart'; // Importa MainNavigation
 
 class AppRoutes {
-  static Map<String, WidgetBuilder> routes = {
+  static final routes = {
     '/login': (context) => const LoginScreen(),
     '/register': (context) => const RegisterScreen(),
-    '/home': (context) => const KeyListScreen(),
-    '/keys': (context) => const KeyListScreen(),
-    // '/profile': (context) => const ProfileScreen(),
+    '/home': (context) => const MainNavigation(), // Adicione esta linha
   };
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/key_table_card.dart';
 import '../widgets/key_item_card.dart' as item_card;
-import '../widgets/custom_bottom_nav_bar.dart';
+import 'key_detail_screen.dart'; // Importa a tela correta de detalhes
 
 class KeyListScreen extends StatefulWidget {
   const KeyListScreen({super.key});
@@ -29,7 +29,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
   void addTable(String name) {
     setState(() {
       tables.add(TableData(name, getRandomColor()));
-      // Aqui você pode chamar a API/backend futuramente
+      // TODO: Chamar API/backend para criar tabela
     });
   }
 
@@ -92,7 +92,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
               if (controller.text.trim().isNotEmpty) {
                 setState(() {
                   table.keys.insert(0, _KeyItemData(controller.text.trim()));
-                  // Aqui você pode chamar a API/backend futuramente
+                  // TODO: Chamar API/backend para criar chave
                 });
                 Navigator.pop(context);
                 Navigator.push(
@@ -129,6 +129,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
         _KeyItemData('XYZ98765'),
       ]),
     ];
+    // TODO: Carregar tabelas e chaves do backend aqui
   }
 
   @override
@@ -222,7 +223,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                   IconButton(
                     icon: const Icon(Icons.filter_list, color: Colors.white54, size: 22),
                     onPressed: () {
-                      // Aqui você pode implementar o filtro (API/backend)
+                      // TODO: Implementar filtro usando API/backend
                     },
                   ),
                 ],
@@ -292,6 +293,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                                           table.color,
                                           table.keys,
                                         );
+                                        // TODO: Atualizar nome da tabela no backend
                                       });
                                       Navigator.pop(context);
                                     }
@@ -322,6 +324,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                                   onPressed: () {
                                     setState(() {
                                       tables.removeAt(index);
+                                      // TODO: Remover tabela do backend
                                     });
                                     Navigator.pop(context);
                                   },
@@ -407,12 +410,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        onTap: (index) {
-          // Implemente a navegação aqui, se quiser
-        },
-      ),
     );
   }
 }
@@ -458,37 +455,4 @@ class TableData {
 
   TableData(this.name, this.color, [List<_KeyItemData>? keys])
       : keys = keys ?? [];
-}
-
-// Tela simples de detalhes da chave
-class KeyDetailScreen extends StatelessWidget {
-  final String keyName;
-
-  const KeyDetailScreen({super.key, required this.keyName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(keyName, style: GoogleFonts.inter(color: Colors.white)),
-        backgroundColor: const Color(0xFF181818),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () {
-              // Implementar a ação de deletar chave futuramente
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Text(
-          'Detalhes da Chave: $keyName',
-          style: GoogleFonts.inter(color: Colors.white, fontSize: 18),
-        ),
-      ),
-      backgroundColor: const Color(0xFF121212),
-    );
-  }
 }
