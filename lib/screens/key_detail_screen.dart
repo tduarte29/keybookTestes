@@ -172,7 +172,13 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.keyName, style: GoogleFonts.inter()),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+        ),
+        title: Text(
+          widget.keyName,
+          style: GoogleFonts.inter(),
+        ),
         backgroundColor: const Color(0xFF232323),
         actions: [
           IconButton(
