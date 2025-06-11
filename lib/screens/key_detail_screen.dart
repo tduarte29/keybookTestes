@@ -3,6 +3,51 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+// MODELOS AUXILIARES
+class _PropertyField {
+  final String label;
+  final IconData icon;
+  _PropertyField(this.label, this.icon);
+}
+
+// WIDGETS AUXILIARES
+class _PropertyTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _PropertyTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white54, size: 20),
+      title: Text(label, style: GoogleFonts.inter(color: Colors.white)),
+      trailing: SizedBox(
+        width: 120,
+        child: TextField(
+          style: GoogleFonts.inter(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'vazio',
+            hintStyle: GoogleFonts.inter(color: Colors.white38),
+            border: InputBorder.none,
+          ),
+          onChanged: onChanged,
+        ),
+      ),
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+    );
+  }
+}
+
+// TELA PRINCIPAL
 class KeyDetailScreen extends StatefulWidget {
   final String keyName;
   const KeyDetailScreen({super.key, required this.keyName});
@@ -236,48 +281,6 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
           const SizedBox(height: 24),
         ],
       ),
-    );
-  }
-}
-
-class _PropertyField {
-  final String label;
-  final IconData icon;
-  _PropertyField(this.label, this.icon);
-}
-
-class _PropertyTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  const _PropertyTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white54, size: 20),
-      title: Text(label, style: GoogleFonts.inter(color: Colors.white)),
-      trailing: SizedBox(
-        width: 120,
-        child: TextField(
-          style: GoogleFonts.inter(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'vazio',
-            hintStyle: GoogleFonts.inter(color: Colors.white38),
-            border: InputBorder.none,
-          ),
-          onChanged: onChanged,
-        ),
-      ),
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
     );
   }
 }

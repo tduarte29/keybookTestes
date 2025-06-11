@@ -3,8 +3,51 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/key_table_card.dart';
 import '../widgets/key_item_card.dart' as item_card;
-import 'key_detail_screen.dart'; // Importa a tela correta de detalhes
+import 'key_detail_screen.dart';
 
+// MODELOS LOCAIS
+class TableData {
+  final String name;
+  final Color color;
+  final List<_KeyItemData> keys;
+
+  TableData(this.name, this.color, [List<_KeyItemData>? keys])
+      : keys = keys ?? [];
+}
+
+class _KeyItemData {
+  final String name;
+  _KeyItemData(this.name);
+}
+
+// WIDGET AUXILIAR
+class AddKeyCard extends StatelessWidget {
+  final VoidCallback? onTap;
+  const AddKeyCard({super.key, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F0F0F),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.all(10),
+        child: SizedBox(
+          height: 64,
+          child: Center(
+            child: Icon(Icons.add, color: Colors.white, size: 28),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// TELA PRINCIPAL
 class KeyListScreen extends StatefulWidget {
   const KeyListScreen({super.key});
 
@@ -412,47 +455,4 @@ class _KeyListScreenState extends State<KeyListScreen> {
       ),
     );
   }
-}
-
-// Modelo local para simular uma chave
-class _KeyItemData {
-  final String name;
-  _KeyItemData(this.name);
-}
-
-// Botão quadrado para adicionar nova chave
-class AddKeyCard extends StatelessWidget {
-  final VoidCallback? onTap;
-  const AddKeyCard({super.key, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F0F0F),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.all(10),
-        child: SizedBox(
-          height: 64,
-          child: Center(
-            child: Icon(Icons.add, color: Colors.white, size: 28),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Modelo local para simular uma tabela/marca
-class TableData {
-  final String name;
-  final Color color;
-  final List<_KeyItemData> keys;
-
-  TableData(this.name, this.color, [List<_KeyItemData>? keys])
-      : keys = keys ?? [];
 }

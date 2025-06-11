@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../widgets/current_location_map.dart';
 
+// TELA PRINCIPAL
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
