@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   children: [
                     Checkbox(
+                      overlayColor: WidgetStatePropertyAll(Colors.grey.shade800),
                       value: rememberMe,
                       onChanged: (value) {
                         setState(() {
