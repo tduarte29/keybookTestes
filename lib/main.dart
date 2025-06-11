@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ADICIONE ESTES IMPORTS:
 import 'screens/key_list_screen.dart';    // Home
 import 'screens/home_screen.dart';        // (Mapa e notificações, se quiser usar em outro lugar)
 import 'screens/profile_screen.dart';     // Perfil
 import 'screens/historic_screen.dart';    // Histórico
 import 'widgets/custom_bottom_nav_bar.dart';
-// FIM DOS IMPORTS
 
 void main() {
   runApp(const KeybookApp());
