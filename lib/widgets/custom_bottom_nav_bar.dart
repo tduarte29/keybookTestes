@@ -23,19 +23,19 @@ class CustomBottomNavBar extends StatelessWidget {
       onTap: onTap,
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined, size: 26),
+          icon: Icon(Icons.home, size: 26),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.table_chart_outlined, size: 26),
+          icon: Icon(Icons.list, size: 26),
           label: 'Tabelas',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.add_box_outlined, size: 26),
+          icon: Icon(Icons.inbox_rounded, size: 26),
           label: 'Criar',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.search, size: 26),
+          icon: Icon(Icons.person, size: 26),
           label: 'Buscar',
         ),
       ],

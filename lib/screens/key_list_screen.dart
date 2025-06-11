@@ -60,7 +60,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                 Navigator.pop(context);
               }
             },
-            child: Text('OK', style: GoogleFonts.inter(color: Colors.white)),
+            child: Text('OK', style: GoogleFonts.inter(color: Colors.grey.shade900)),
           ),
         ],
       ),
@@ -105,7 +105,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                 );
               }
             },
-            child: Text('OK', style: GoogleFonts.inter(color: Colors.white)),
+            child: Text('OK', style: GoogleFonts.inter(color: Colors.grey.shade900)),
           ),
         ],
       ),
@@ -156,7 +156,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                   child: TextField(
                     style: GoogleFonts.inter(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'nome da tabela',
+                      hintText: 'Nome da tabela',
                       hintStyle: GoogleFonts.inter(color: Colors.white70),
                       border: const UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.white24, width: 1.2),
@@ -185,7 +185,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                       ),
                     ),
                     child: Text(
-                      'adicionar tabela',
+                      'Adicionar Tabela',
                       style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 13,
@@ -212,7 +212,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                     child: TextField(
                       style: GoogleFonts.inter(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: 'Pesquisar items',
+                        hintText: 'Pesquisar Items',
                         hintStyle: GoogleFonts.inter(color: Colors.white54),
                         border: InputBorder.none,
                         isDense: true,
@@ -256,6 +256,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                     title: Text(
                       '${table.keys.length} items',
                       style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+                      textAlign: TextAlign.end,
                     ),
                     trailing: PopupMenuButton<int>(
                       color: const Color(0xFF232323),

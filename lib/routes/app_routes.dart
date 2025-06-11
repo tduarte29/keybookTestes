@@ -8,7 +8,7 @@ class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     '/login': (context) => const LoginScreen(),
     '/register': (context) => const RegisterScreen(),
-    '/home': (context) => const HomeScreen(),
+    '/home': (context) => const KeyListScreen(),
     '/keys': (context) => const KeyListScreen(),
   };
 }
