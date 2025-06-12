@@ -90,43 +90,50 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Mapa'),
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      ),
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const CurrentLocationMap(),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _location != null ? _location! : 'Obtendo localização...',
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const CurrentLocationMap(),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _location != null ? _location! : 'Obtendo localização...',
+                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF232323),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF232323),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: _showNotification,
+                  child: Text(
+                    'Notificação',
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
                   ),
                 ),
-                onPressed: _showNotification,
-                child: Text(
-                  'Notificação',
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
