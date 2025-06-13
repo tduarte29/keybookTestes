@@ -89,6 +89,7 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
       ),
       builder: (context) {
         return SafeArea(
+          bottom: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

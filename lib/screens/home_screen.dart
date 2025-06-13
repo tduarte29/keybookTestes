@@ -91,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Mapa'),

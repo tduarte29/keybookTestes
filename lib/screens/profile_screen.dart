@@ -6,12 +6,14 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF181818),
-      body: Center(
-        child: Text(
-          'Tela de Perfil',
-          style: GoogleFonts.inter(color: Colors.white, fontSize: 22),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: const Color(0xFF181818),
+        body: Center(
+          child: Text(
+            'Tela de Perfil',
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 22),
+          ),
         ),
       ),
     );
