@@ -173,7 +173,8 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: Colors.white), // <-- Adicione esta linha
+        titleTextStyle: const TextStyle(
           color: Colors.white,
         ),
         title: Text(

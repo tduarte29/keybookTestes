@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/key_table_card.dart';
 import '../widgets/key_item_card.dart' as item_card;
 import 'key_detail_screen.dart';
 

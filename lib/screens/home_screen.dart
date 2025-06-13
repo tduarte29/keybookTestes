@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../widgets/current_location_map.dart';
 
 // TELA PRINCIPAL
@@ -19,8 +20,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _requestLocationPermission();
     _getLocation();
     _initNotifications();
+    _requestNotificationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    await Geolocator.requestPermission();
   }
 
   Future<void> _initNotifications() async {
@@ -86,6 +93,12 @@ class _HomeScreenState extends State<HomeScreen> {
       'Você possui uma tarefa pendente!',
       platformChannelSpecifics,
     );
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
   }
 
   @override
