@@ -1,8 +1,103 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
-class RegisterScreen extends StatelessWidget {
+import 'package:keybook/service/auth_service.dart';
+
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  // Controladores para os campos de texto
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  bool _validateEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  bool _validatePassword(String password) {
+    return password.length >= 6;
+  }
+
+  Future<void> _handleRegister() async {
+    // Validar campos básicos primeiro
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('As senhas não coincidem')));
+      return;
+    }
+
+    if (!_validateEmail(_emailController.text)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Email inválido')));
+      return;
+    }
+
+    if (!_validatePassword(_passwordController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Senha deve ter pelo menos 6 caracteres')),
+      );
+      return;
+    }
+
+    // Só ativa o loading depois de passar por todas as validações
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService.register(
+        _nameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro no registro: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +111,7 @@ class RegisterScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 48),
-                Image.asset(
-                  'assets/logokeybook.png',
-                  height: 120,
-                ),
+                Image.asset('assets/logokeybook.png', height: 120),
                 const SizedBox(height: 48),
                 Text(
                   'Registre-se agora!',
@@ -32,17 +124,26 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
                 _RegisterTextField(
-                  hintText: 'email ou username',
+                  controller: _nameController,
+                  hintText: 'Nome completo',
                   obscureText: false,
                 ),
                 const SizedBox(height: 18),
                 _RegisterTextField(
-                  hintText: 'password',
+                  controller: _emailController,
+                  hintText: 'Email',
+                  obscureText: false,
+                ),
+                const SizedBox(height: 18),
+                _RegisterTextField(
+                  controller: _passwordController,
+                  hintText: 'Senha',
                   obscureText: true,
                 ),
                 const SizedBox(height: 18),
                 _RegisterTextField(
-                  hintText: 'confirm password',
+                  controller: _confirmPasswordController,
+                  hintText: 'Confirmar senha',
                   obscureText: true,
                 ),
                 const SizedBox(height: 18),
@@ -51,22 +152,25 @@ class RegisterScreen extends StatelessWidget {
                   child: SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      },
+                      onPressed: _isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
-                      child: Text(
-                        'Register',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : Text(
+                                'Registrar',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                     ),
                   ),
                 ),
@@ -76,9 +180,7 @@ class RegisterScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Já possui uma conta? ',
-                      style: GoogleFonts.inter(
-                        color: Colors.white70,
-                      ),
+                      style: GoogleFonts.inter(color: Colors.white70),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -106,10 +208,12 @@ class RegisterScreen extends StatelessWidget {
 
 // Campo de texto customizado para registro, underline sutil e sem fundo
 class _RegisterTextField extends StatelessWidget {
+  final TextEditingController controller;
   final String hintText;
   final bool obscureText;
 
   const _RegisterTextField({
+    required this.controller,
     required this.hintText,
     required this.obscureText,
   });
@@ -117,6 +221,7 @@ class _RegisterTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       style: GoogleFonts.inter(color: Colors.white),
       decoration: InputDecoration(
