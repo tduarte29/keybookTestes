@@ -241,11 +241,81 @@ class _KeyListScreenState extends State<KeyListScreen> {
                         ),
                       ),
                     ),
-                    IconButton(
+                    PopupMenuButton<int>(
                       icon: const Icon(Icons.filter_list, color: Colors.white54, size: 22),
-                      onPressed: () {
-                        // TODO: Implementar filtro usando API/backend
+                      color: const Color(0xFF232323),
+                      onSelected: (value) {
+                        // TODO: Implemente a lógica de filtro/ordenação aqui
+                        switch (value) {
+                          case 0:
+                            // Ordem Alfabética (A-Z)
+                            break;
+                          case 1:
+                            // Ordem Alfabética (Z-A)
+                            break;
+                          case 2:
+                            // Mais Recentes
+                            break;
+                          case 3:
+                            // Mais Antigas
+                            break;
+                          case 4:
+                            // Filtrar por Propriedade Importante
+                            break;
+                        }
                       },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 0,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.sort_by_alpha, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Ordem Alfabética (A-Z)', style: GoogleFonts.inter(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 1,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.sort_by_alpha, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Ordem Alfabética (Z-A)', style: GoogleFonts.inter(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 2,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Mais Recentes', style: GoogleFonts.inter(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 3,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Mais Antigas', style: GoogleFonts.inter(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 4,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.vpn_key, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text('Filtrar por Propriedade Importante', style: GoogleFonts.inter(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
