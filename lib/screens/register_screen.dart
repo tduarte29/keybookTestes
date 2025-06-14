@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -95,6 +98,26 @@ class RegisterScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final response = await http.post(
+                        Uri.parse('http://127.0.0.1:8080/auth/register'),
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'nome': 'TesteFlutter',
+                          'email': 'flutter@teste.com',
+                          'password': '123456'
+                        }),
+                      );
+                      print('Status: ${response.statusCode}');
+                      print('Corpo: ${response.body}');
+                    } catch (e) {
+                      print('Erro: $e');
+                    }
+                  },
+                  child: Text('Testar Conexão'),
+                )
               ],
             ),
           ),
