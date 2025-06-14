@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'PUSH NOTIFICATION',
       'Você possui uma tarefa pendente!',
       platformChannelSpecifics,
-      payload: 'notificacao', // Adicione um payload se quiser
+      payload: 'notificacao',
     );
   }
 
@@ -105,6 +105,32 @@ class _HomeScreenState extends State<HomeScreen> {
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
+  }
+
+  void _showNotificationTip() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF232323),
+        title: Text(
+          'Dica',
+          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Se a notificação não aparecer:\n\n'
+          '- Certifique-se de que a permissão de notificação está ativada nas configurações do app.\n'
+          '- Em alguns celulares, pode ser necessário ativar manualmente.\n'
+          '- Em emuladores, notificações podem não funcionar corretamente.',
+          style: GoogleFonts.inter(color: Colors.white70, fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: GoogleFonts.inter(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -149,6 +175,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     'Notificação',
                     style: GoogleFonts.inter(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: _showNotificationTip,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.help_outline, color: Colors.blue, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'A notificação não está funcionando ?',
+                        style: GoogleFonts.inter(
+                          color: Colors.blue,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 0.2,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
