@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -86,13 +88,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   Divider(color: Colors.white24, height: 1),
                   ListTile(
-                    leading: const Icon(Icons.security, color: Colors.white),
-                    title: Text('Privacidade', style: GoogleFonts.inter(color: Colors.white)),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-                    onTap: () {},
-                  ),
-                  Divider(color: Colors.white24, height: 1),
-                  ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
                     title: Text('Log out', style: GoogleFonts.inter(color: Colors.red)),
                     onTap: () => _showLogoutDialog(context),
@@ -123,6 +118,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   final TextEditingController usernameController = TextEditingController(text: 'Username');
   final TextEditingController emailController = TextEditingController(text: 'email@exemplo.com');
   final TextEditingController passwordController = TextEditingController(text: '********');
+
+  XFile? _image;
+  final picker = ImagePicker();
 
   @override
   void dispose() {
@@ -161,6 +159,52 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
     );
   }
 
+  void _showImagePickerOptions() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF232323),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          bottom: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.white),
+                title: Text('Tirar Foto', style: GoogleFonts.inter(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _image = pickedFile;
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.white),
+                title: Text('Abrir Galeria', style: GoogleFonts.inter(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    setState(() {
+                      _image = pickedFile;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -196,7 +240,7 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
         body: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           children: [
-            // Avatar com botão +
+            // Avatar com botão + (menor) e imagem
             Center(
               child: Stack(
                 children: [
@@ -207,25 +251,32 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                       color: Color(0xFF232323),
                       shape: BoxShape.circle,
                     ),
-                    child: const Center(
-                      child: Icon(Icons.person, color: Colors.white38, size: 50),
+                    child: ClipOval(
+                      child: _image == null
+                          ? const Center(
+                              child: Icon(Icons.person, color: Colors.white38, size: 50),
+                            )
+                          : Image.file(
+                              File(_image!.path),
+                              fit: BoxFit.cover,
+                              width: 110,
+                              height: 110,
+                            ),
                     ),
                   ),
                   Positioned(
-                    bottom: 0,
-                    right: 0,
+                    bottom: 8,
+                    right: 8,
                     child: GestureDetector(
-                      onTap: () {
-                        // TODO: Implementar troca de foto
-                      },
+                      onTap: _showImagePickerOptions,
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.blue,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(Icons.add, color: Colors.white, size: 20),
+                        padding: const EdgeInsets.all(3), // menor
+                        child: const Icon(Icons.add, color: Colors.white, size: 25), // menor
                       ),
                     ),
                   ),

@@ -35,7 +35,12 @@ class _HomeScreenState extends State<HomeScreen> {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
-    await _notificationsPlugin.initialize(initializationSettings);
+    await _notificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) {
+        // Você pode adicionar lógica aqui se quiser abrir uma tela ao clicar na notificação
+      },
+    );
   }
 
   Future<void> _getLocation() async {
@@ -92,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'PUSH NOTIFICATION',
       'Você possui uma tarefa pendente!',
       platformChannelSpecifics,
+      payload: 'notificacao', // Adicione um payload se quiser
     );
   }
 

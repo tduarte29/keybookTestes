@@ -56,6 +56,7 @@ class KeyListScreen extends StatefulWidget {
 
 class _KeyListScreenState extends State<KeyListScreen> {
   late List<TableData> tables;
+  final TextEditingController tableNameController = TextEditingController();
 
   // Gera uma cor randômica para o label da tabela/marca
   Color getRandomColor() {
@@ -68,45 +69,15 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 
-  void addTable(String name) {
-    setState(() {
-      tables.add(TableData(name, getRandomColor()));
-      // TODO: Chamar API/backend para criar tabela
-    });
-  }
-
-  void showAddTableDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF232323),
-        title: Text('Nova tabela', style: GoogleFonts.inter(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: GoogleFonts.inter(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Nome da tabela',
-            hintStyle: GoogleFonts.inter(color: Colors.white54),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: GoogleFonts.inter(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                addTable(controller.text.trim());
-                Navigator.pop(context);
-              }
-            },
-            child: Text('OK', style: GoogleFonts.inter(color: Colors.grey.shade900)),
-          ),
-        ],
-      ),
-    );
+  void addTable() {
+    final name = tableNameController.text.trim();
+    if (name.isNotEmpty) {
+      setState(() {
+        tables.add(TableData(name, getRandomColor()));
+        tableNameController.clear();
+        // TODO: Chamar API/backend para criar tabela
+      });
+    }
   }
 
   void showAddKeyDialog(TableData table) {
@@ -155,6 +126,12 @@ class _KeyListScreenState extends State<KeyListScreen> {
   }
 
   @override
+  void dispose() {
+    tableNameController.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     tables = [
@@ -198,6 +175,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: tableNameController,
                       style: GoogleFonts.inter(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'Nome da tabela',
@@ -220,7 +198,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                   SizedBox(
                     height: 36,
                     child: ElevatedButton(
-                      onPressed: showAddTableDialog,
+                      onPressed: addTable,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
