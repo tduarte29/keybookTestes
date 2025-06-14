@@ -4,8 +4,77 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
-class RegisterScreen extends StatelessWidget {
+import 'package:keybook/service/auth_service.dart';
+
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  // Controladores para os campos de texto
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    // Validar campos
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('As senhas não coincidem')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService.register(
+        _nameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      // Se o registro for bem-sucedido
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro no registro: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +104,26 @@ class RegisterScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
                 _RegisterTextField(
-                  hintText: 'email ou username',
+                  controller: _nameController,
+                  hintText: 'Nome completo',
                   obscureText: false,
                 ),
                 const SizedBox(height: 18),
                 _RegisterTextField(
-                  hintText: 'password',
+                  controller: _emailController,
+                  hintText: 'Email',
+                  obscureText: false,
+                ),
+                const SizedBox(height: 18),
+                _RegisterTextField(
+                  controller: _passwordController,
+                  hintText: 'Senha',
                   obscureText: true,
                 ),
                 const SizedBox(height: 18),
                 _RegisterTextField(
-                  hintText: 'confirm password',
+                  controller: _confirmPasswordController,
+                  hintText: 'Confirmar senha',
                   obscureText: true,
                 ),
                 const SizedBox(height: 18),
@@ -54,17 +132,17 @@ class RegisterScreen extends StatelessWidget {
                   child: SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      },
+                      onPressed: _isLoading ? null : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
-                      child: Text(
-                        'Register',
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                        'Registrar',
                         style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 16,
@@ -98,26 +176,6 @@ class RegisterScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      final response = await http.post(
-                        Uri.parse('http://127.0.0.1:8080/auth/register'),
-                        headers: {'Content-Type': 'application/json'},
-                        body: jsonEncode({
-                          'nome': 'TesteFlutter',
-                          'email': 'flutter@teste.com',
-                          'password': '123456'
-                        }),
-                      );
-                      print('Status: ${response.statusCode}');
-                      print('Corpo: ${response.body}');
-                    } catch (e) {
-                      print('Erro: $e');
-                    }
-                  },
-                  child: Text('Testar Conexão'),
-                )
               ],
             ),
           ),
@@ -129,10 +187,12 @@ class RegisterScreen extends StatelessWidget {
 
 // Campo de texto customizado para registro, underline sutil e sem fundo
 class _RegisterTextField extends StatelessWidget {
+  final TextEditingController controller;
   final String hintText;
   final bool obscureText;
 
   const _RegisterTextField({
+    required this.controller,
     required this.hintText,
     required this.obscureText,
   });
@@ -140,6 +200,7 @@ class _RegisterTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       style: GoogleFonts.inter(color: Colors.white),
       decoration: InputDecoration(
