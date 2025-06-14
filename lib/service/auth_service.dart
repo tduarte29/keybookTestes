@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   static const String _baseUrl = 'http://127.0.0.1:8080/auth';
+  static String? _token; // Armazenará o token JWT
 
   static Future<void> register(String nome, String email, String password) async {
     final response = await http.post(
@@ -20,6 +21,29 @@ class AuthService {
       throw Exception('Falha no registro: ${response.statusCode}');
     }
   }
+
+  // Método de login
+  static Future<String> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      _token = jsonDecode(response.body)['token']; // Supondo que o backend retorne um token
+      return _token!;
+    } else {
+      throw Exception('Falha no login: ${response.statusCode}');
+    }
+  }
+
+  // Método para obter o token (usado em outras requisições)
+  static String? get token => _token;
+
 }
 
 // class AuthService {

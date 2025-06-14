@@ -17,7 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Controladores para os campos de texto
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _nameController = TextEditingController();
 
   bool _isLoading = false;
@@ -31,25 +32,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  bool _validateEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  bool _validatePassword(String password) {
+    return password.length >= 6;
+  }
+
   Future<void> _handleRegister() async {
-    // Validar campos
+    // Validar campos básicos primeiro
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('As senhas não coincidem')));
+      return;
+    }
+
+    if (!_validateEmail(_emailController.text)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Email inválido')));
+      return;
+    }
+
+    if (!_validatePassword(_passwordController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('As senhas não coincidem')),
+        const SnackBar(content: Text('Senha deve ter pelo menos 6 caracteres')),
       );
       return;
     }
 
+    // Só ativa o loading depois de passar por todas as validações
     setState(() => _isLoading = true);
 
     try {
@@ -59,7 +83,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text,
       );
 
-      // Se o registro for bem-sucedido
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -88,10 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 48),
-                Image.asset(
-                  'assets/logokeybook.png',
-                  height: 120,
-                ),
+                Image.asset('assets/logokeybook.png', height: 120),
                 const SizedBox(height: 48),
                 Text(
                   'Registre-se agora!',
@@ -139,15 +159,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                        'Registrar',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : Text(
+                                'Registrar',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                     ),
                   ),
                 ),
@@ -157,9 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     Text(
                       'Já possui uma conta? ',
-                      style: GoogleFonts.inter(
-                        color: Colors.white70,
-                      ),
+                      style: GoogleFonts.inter(color: Colors.white70),
                     ),
                     GestureDetector(
                       onTap: () {
