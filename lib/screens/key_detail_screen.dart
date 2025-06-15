@@ -34,7 +34,7 @@ class _PropertyTile extends StatelessWidget {
         child: TextField(
           style: GoogleFonts.inter(color: Colors.white),
           decoration: InputDecoration(
-            hintText: 'vazio',
+            hintText: 'Sem valores',
             hintStyle: GoogleFonts.inter(color: Colors.white38),
             border: InputBorder.none,
           ),
