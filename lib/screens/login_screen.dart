@@ -175,6 +175,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/home');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: Text(
+                        'Pular login',
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
