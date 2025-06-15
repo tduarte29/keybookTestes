@@ -34,10 +34,7 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      _token =
-          jsonDecode(
-            response.body,
-          )['token']; // Supondo que o backend retorne um token
+      _token = jsonDecode(response.body)['token'];
       return _token!;
     } else {
       throw Exception('Falha no login: ${response.statusCode}');
