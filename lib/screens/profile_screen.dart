@@ -3,35 +3,76 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
-class ProfileScreen extends StatelessWidget {
+import '../service/auth_service.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF232323),
-        title: Text('Sair da conta?', style: GoogleFonts.inter(color: Colors.white)),
-        content: Text(
-          'Tem certeza que deseja sair?',
-          style: GoogleFonts.inter(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: GoogleFonts.inter(color: Colors.white70)),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFF232323),
+            title: Text(
+              'Sair da conta?',
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
+            content: Text(
+              'Tem certeza que deseja sair?',
+              style: GoogleFonts.inter(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancelar',
+                  style: GoogleFonts.inter(color: Colors.white70),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _performLogout(context);
+                },
+                child: Text(
+                  'Sair',
+                  style: GoogleFonts.inter(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            child: Text('Sair', style: GoogleFonts.inter(color: Colors.white)),
-          ),
-        ],
-      ),
     );
+  }
+
+  Future<void> _performLogout(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+
+    try {
+      scaffold.showSnackBar(
+        const SnackBar(content: Text('Encerrando sessão...')),
+      );
+
+      await AuthService.logout();
+
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    } catch (e) {
+      if (!mounted) return;
+      scaffold.hideCurrentSnackBar();
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text('Erro ao sair: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -42,7 +83,6 @@ class ProfileScreen extends StatelessWidget {
         body: Column(
           children: [
             const SizedBox(height: 32),
-            // Avatar sem botão +
             Center(
               child: Container(
                 width: 110,
@@ -51,14 +91,12 @@ class ProfileScreen extends StatelessWidget {
                   color: Color(0xFF232323),
                   shape: BoxShape.circle,
                 ),
-                // Ícone de usuário simples
                 child: const Center(
                   child: Icon(Icons.person, color: Colors.white38, size: 50),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            // Username
             Center(
               child: Text(
                 'Username',
@@ -70,26 +108,36 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            // Opções
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
                   ListTile(
                     leading: const Icon(Icons.person, color: Colors.white),
-                    title: Text('Conta', style: GoogleFonts.inter(color: Colors.white)),
-                    trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+                    title: Text(
+                      'Conta',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.white54,
+                    ),
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ProfileDetailsScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileDetailsScreen(),
+                        ),
                       );
                     },
                   ),
-                  Divider(color: Colors.white24, height: 1),
+                  const Divider(color: Colors.white24, height: 1),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
-                    title: Text('Log out', style: GoogleFonts.inter(color: Colors.red)),
+                    title: Text(
+                      'Log out',
+                      style: GoogleFonts.inter(color: Colors.red),
+                    ),
                     onTap: () => _showLogoutDialog(context),
                   ),
                 ],
@@ -101,6 +149,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
+// O resto do seu código (ProfileDetailsScreen e _EditableField) permanece igual
 
 // NOVA TELA: Detalhes do Perfil
 class ProfileDetailsScreen extends StatefulWidget {
@@ -115,9 +165,15 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   bool isEditingEmail = false;
   bool isEditingPassword = false;
 
-  final TextEditingController usernameController = TextEditingController(text: 'Username');
-  final TextEditingController emailController = TextEditingController(text: 'email@exemplo.com');
-  final TextEditingController passwordController = TextEditingController(text: '********');
+  final TextEditingController usernameController = TextEditingController(
+    text: 'Username',
+  );
+  final TextEditingController emailController = TextEditingController(
+    text: 'email@exemplo.com',
+  );
+  final TextEditingController passwordController = TextEditingController(
+    text: '********',
+  );
 
   XFile? _image;
   final picker = ImagePicker();
@@ -133,29 +189,39 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF232323),
-        title: Text('Deletar Conta?', style: GoogleFonts.inter(color: Colors.red)),
-        content: Text(
-          'Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.',
-          style: GoogleFonts.inter(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: GoogleFonts.inter(color: Colors.white70)),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFF232323),
+            title: Text(
+              'Deletar Conta?',
+              style: GoogleFonts.inter(color: Colors.red),
+            ),
+            content: Text(
+              'Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.',
+              style: GoogleFonts.inter(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancelar',
+                  style: GoogleFonts.inter(color: Colors.white70),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  Navigator.pop(context);
+                  // TODO: Implementar deleção real da conta
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                child: Text(
+                  'Deletar',
+                  style: GoogleFonts.inter(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implementar deleção real da conta
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            child: Text('Deletar', style: GoogleFonts.inter(color: Colors.white)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -174,10 +240,15 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Colors.white),
-                title: Text('Tirar Foto', style: GoogleFonts.inter(color: Colors.white)),
+                title: Text(
+                  'Tirar Foto',
+                  style: GoogleFonts.inter(color: Colors.white),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                  final pickedFile = await picker.pickImage(
+                    source: ImageSource.camera,
+                  );
                   if (pickedFile != null) {
                     setState(() {
                       _image = pickedFile;
@@ -187,10 +258,15 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Colors.white),
-                title: Text('Abrir Galeria', style: GoogleFonts.inter(color: Colors.white)),
+                title: Text(
+                  'Abrir Galeria',
+                  style: GoogleFonts.inter(color: Colors.white),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                  final pickedFile = await picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
                   if (pickedFile != null) {
                     setState(() {
                       _image = pickedFile;
@@ -225,14 +301,21 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Alterações salvas!', style: GoogleFonts.inter()),
+                    content: Text(
+                      'Alterações salvas!',
+                      style: GoogleFonts.inter(),
+                    ),
                     backgroundColor: Colors.green,
                   ),
                 );
               },
               child: Text(
                 'Salvar',
-                style: GoogleFonts.inter(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16),
+                style: GoogleFonts.inter(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
@@ -252,16 +335,21 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: ClipOval(
-                      child: _image == null
-                          ? const Center(
-                              child: Icon(Icons.person, color: Colors.white38, size: 50),
-                            )
-                          : Image.file(
-                              File(_image!.path),
-                              fit: BoxFit.cover,
-                              width: 110,
-                              height: 110,
-                            ),
+                      child:
+                          _image == null
+                              ? const Center(
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.white38,
+                                  size: 50,
+                                ),
+                              )
+                              : Image.file(
+                                File(_image!.path),
+                                fit: BoxFit.cover,
+                                width: 110,
+                                height: 110,
+                              ),
                     ),
                   ),
                   Positioned(
@@ -276,7 +364,11 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                           border: Border.all(color: Colors.white, width: 2),
                         ),
                         padding: const EdgeInsets.all(3), // menor
-                        child: const Icon(Icons.add, color: Colors.white, size: 25), // menor
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 25,
+                        ), // menor
                       ),
                     ),
                   ),
@@ -320,7 +412,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: _showDeleteAccountDialog,
                 child: Text(
@@ -361,47 +455,51 @@ class _EditableField extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: isEditing
-              ? TextField(
-                  controller: controller,
-                  obscureText: obscureText,
-                  style: GoogleFonts.inter(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: label,
-                    labelStyle: GoogleFonts.inter(color: Colors.white70),
-                    border: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 1.5),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 1.5),
-                    ),
-                  ),
-                  onChanged: onChanged,
-                  onEditingComplete: onDone,
-                  autofocus: true,
-                )
-              : GestureDetector(
-                  onTap: onEdit,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+          child:
+              isEditing
+                  ? TextField(
+                    controller: controller,
+                    obscureText: obscureText,
+                    style: GoogleFonts.inter(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: label,
+                      labelStyle: GoogleFonts.inter(color: Colors.white70),
+                      border: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 1.5),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        obscureText ? '********' : controller.text,
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 1.5),
+                      ),
+                    ),
+                    onChanged: onChanged,
+                    onEditingComplete: onDone,
+                    autofocus: true,
+                  )
+                  : GestureDetector(
+                    onTap: onEdit,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            color: Colors.white54,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                      const Divider(color: Colors.white24, height: 1),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          obscureText ? '********' : controller.text,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const Divider(color: Colors.white24, height: 1),
+                      ],
+                    ),
                   ),
-                ),
         ),
         if (!isEditing)
           IconButton(
@@ -412,8 +510,3 @@ class _EditableField extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
