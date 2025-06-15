@@ -1,9 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:keybook/service/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -14,73 +10,27 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controladores para os campos de texto
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
-
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
-  bool _validateEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
-
-  bool _validatePassword(String password) {
-    return password.length >= 6;
-  }
-
   Future<void> _handleRegister() async {
-    // Validar campos básicos primeiro
-    if (_nameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
-      return;
-    }
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('As senhas não coincidem')));
-      return;
-    }
-
-    if (!_validateEmail(_emailController.text)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Email inválido')));
-      return;
-    }
-
-    if (!_validatePassword(_passwordController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Senha deve ter pelo menos 6 caracteres')),
-      );
-      return;
-    }
-
-    // Só ativa o loading depois de passar por todas as validações
-    setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) return;
 
     try {
       await AuthService.register(
-        _nameController.text,
-        _emailController.text,
-        _passwordController.text,
+        nome: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
       );
 
       if (mounted) {
@@ -88,13 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro no registro: ${e.toString()}')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
       }
     }
   }
@@ -107,138 +53,108 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 48),
-                Image.asset('assets/logokeybook.png', height: 120),
-                const SizedBox(height: 48),
-                Text(
-                  'Registre-se agora!',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 48),
+                  Image.asset('assets/logokeybook.png', height: 120),
+                  const SizedBox(height: 48),
+                  Text(
+                    'Registre-se agora!',
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 28),
-                _RegisterTextField(
-                  controller: _nameController,
-                  hintText: 'Nome completo',
-                  obscureText: false,
-                ),
-                const SizedBox(height: 18),
-                _RegisterTextField(
-                  controller: _emailController,
-                  hintText: 'Email',
-                  obscureText: false,
-                ),
-                const SizedBox(height: 18),
-                _RegisterTextField(
-                  controller: _passwordController,
-                  hintText: 'Senha',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 18),
-                _RegisterTextField(
-                  controller: _confirmPasswordController,
-                  hintText: 'Confirmar senha',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: SizedBox(
+                  const SizedBox(height: 28),
+                  _buildTextField(
+                    controller: _nameController,
+                    label: 'Nome completo',
+                    validator:
+                        (value) => value!.isEmpty ? 'Digite seu nome' : null,
+                  ),
+                  const SizedBox(height: 18),
+                  _buildTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    validator:
+                        (value) =>
+                            !value!.contains('@') ? 'Email inválido' : null,
+                  ),
+                  const SizedBox(height: 18),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: 'Senha',
+                    obscureText: true,
+                    validator:
+                        (value) =>
+                            value!.length < 6 ? 'Mínimo 6 caracteres' : null,
+                  ),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleRegister,
+                      onPressed: _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
-                      child:
-                          _isLoading
-                              ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                              : Text(
-                                'Registrar',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Já possui uma conta? ',
-                      style: GoogleFonts.inter(color: Colors.white70),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
                       child: Text(
-                        'clique aqui.',
+                        'Registrar',
                         style: GoogleFonts.inter(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
+                          color: Colors.white,
+                          fontSize: 16,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-              ],
+                  ),
+                  const SizedBox(height: 18),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    child: Text(
+                      'Já tem conta? Faça login',
+                      style: GoogleFonts.inter(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
 
-// Campo de texto customizado para registro, underline sutil e sem fundo
-class _RegisterTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final bool obscureText;
-
-  const _RegisterTextField({
-    required this.controller,
-    required this.hintText,
-    required this.obscureText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
       style: GoogleFonts.inter(color: Colors.white),
       decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: GoogleFonts.inter(color: Colors.grey),
-        filled: false,
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey, width: 1.2),
-        ),
+        labelText: label,
+        labelStyle: GoogleFonts.inter(color: Colors.grey),
         enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey, width: 1.2),
+          borderSide: BorderSide(color: Colors.grey),
         ),
         focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 1.5),
+          borderSide: BorderSide(color: Colors.blue),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
       ),
+      validator: validator,
     );
   }
 }
