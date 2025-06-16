@@ -112,46 +112,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
     }
   }
 
-  // Future<void> _initUserIdAndLoadTables() async {
-  //   userId = await AuthService.getUserId();
-  //   print('UserId carregado: $userId'); // DEPURAÇÃO
-  //   if (userId != null) {
-  //     _loadTables();
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Erro: usuário não autenticado')),
-  //     );
-  //   }
-  // }
-  //
-  // void addTable() async {
-  //   final name = tableNameController.text.trim();
-  //   print('Tentando adicionar tabela: $name para userId: $userId'); // DEPURAÇÃO
-  //   if (name.isNotEmpty && userId != null) {
-  //     try {
-  //       final newTable = await TableService.createTable(
-  //         userId!.toString(),
-  //         name,
-  //       );
-  //       print('Resposta do backend ao criar tabela: $newTable'); // DEPURAÇÃO
-  //       setState(() {
-  //         tables.add(
-  //           TableData(
-  //             newTable['nome'],
-  //             getRandomColor(),
-  //           ), // <-- Corrigido aqui!
-  //         );
-  //         tableNameController.clear();
-  //       });
-  //     } catch (e) {
-  //       print('Erro ao criar tabela: $e'); // DEPURAÇÃO
-  //       ScaffoldMessenger.of(
-  //         context,
-  //       ).showSnackBar(SnackBar(content: Text('Erro ao criar tabela: $e')));
-  //     }
-  //   }
-  // }
-
   void editTable(int index, String newName) {
     setState(() {
       tables[index] = TableData(
@@ -256,30 +216,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
     searchController.dispose();
     super.dispose();
   }
-
-  // Future<void> _loadTables() async {
-  //   try {
-  //     if (userId == null) {
-  //       print('userId é null ao carregar tabelas!'); // DEPURAÇÃO
-  //       return;
-  //     }
-  //     print('Buscando tabelas para userId: $userId'); // DEPURAÇÃO
-  //     final list = await TableService.getUserTables(userId!.toString());
-  //     print('Tabelas recebidas: $list'); // DEPURAÇÃO
-  //     setState(() {
-  //       tables =
-  //           list
-  //               .map<TableData>((t) => TableData(t['nome'], getRandomColor()))
-  //               .toList();
-  //     });
-  //   } catch (e) {
-  //     print('Erro ao carregar tabelas: $e'); // DEPURAÇÃO
-  //     tables = [];
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(SnackBar(content: Text('Erro ao carregar tabelas: $e')));
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
