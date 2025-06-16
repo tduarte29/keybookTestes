@@ -7,6 +7,7 @@ class AuthService {
   // static const String _baseUrl = 'http://10.0.2.2:8080/auth'; // Para emulador Android
   static const String _baseUrl = 'http://localhost:8080/auth'; // Para iOS/web
   static String? _token;
+  static int? _userId;
 
   // Método para inicializar o token ao iniciar o app
   static Future<void> init() async {
@@ -49,10 +50,12 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _token = data['token'];
-
-        // Salva o token localmente
+        _userId = data['userId'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', _token!);
+        if (_userId != null) {
+          await prefs.setString('user_id', _userId.toString());
+        }
 
         return _token!;
       } else {
@@ -63,6 +66,19 @@ class AuthService {
       debugPrint('Erro no login: $e');
       rethrow;
     }
+  }
+
+  // Getter para userId
+  static Future<int?> getUserId() async {
+    if (_userId != null) return _userId;
+    final prefs = await SharedPreferences.getInstance();
+    // Tente pegar como int primeiro
+    if (prefs.containsKey('user_id')) {
+      final val = prefs.get('user_id');
+      if (val is int) return val;
+      if (val is String) return int.tryParse(val);
+    }
+    return null;
   }
 
   // Logout
@@ -81,8 +97,10 @@ class AuthService {
     } finally {
       // 2. Limpeza local garantida
       _token = null;
+      _userId = null;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
+      await prefs.remove('user_id');
     }
   }
 

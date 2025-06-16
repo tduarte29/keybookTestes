@@ -6,6 +6,8 @@ import '../widgets/key_table_expansion.dart';
 import '../widgets/table_name_input.dart';
 import '../widgets/search_filter_bar.dart';
 import 'key_detail_screen.dart';
+import '../service/table_service.dart';
+import '../service/auth_service.dart';
 
 class KeyListScreen extends StatefulWidget {
   const KeyListScreen({super.key});
@@ -15,10 +17,12 @@ class KeyListScreen extends StatefulWidget {
 }
 
 class _KeyListScreenState extends State<KeyListScreen> {
-  late List<TableData> tables;
+  List<TableData> tables = [];
   final TextEditingController tableNameController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
   int _filterOption = 0;
+
+  int? userId;
 
   Color getRandomColor() {
     final random = Random();
@@ -30,13 +34,43 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 
-  void addTable() {
+  @override
+  void initState() {
+    super.initState();
+    _initUserIdAndLoadTables();
+  }
+
+  Future<void> _initUserIdAndLoadTables() async {
+    userId = await AuthService.getUserId();
+    print('UserId carregado: $userId'); // DEPURAÇÃO
+    if (userId != null) {
+      _loadTables();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro: usuário não autenticado')),
+      );
+    }
+  }
+
+  void addTable() async {
     final name = tableNameController.text.trim();
-    if (name.isNotEmpty) {
-      setState(() {
-        tables.add(TableData(name, getRandomColor()));
-        tableNameController.clear();
-      });
+    print('Tentando adicionar tabela: $name para userId: $userId'); // DEPURAÇÃO
+    if (name.isNotEmpty && userId != null) {
+      try {
+        final newTable = await TableService.createTable(userId!.toString(), name);
+        print('Resposta do backend ao criar tabela: $newTable'); // DEPURAÇÃO
+        setState(() {
+          tables.add(
+            TableData(newTable['nome'], getRandomColor()), // <-- Corrigido aqui!
+          );
+          tableNameController.clear();
+        });
+      } catch (e) {
+        print('Erro ao criar tabela: $e'); // DEPURAÇÃO
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao criar tabela: $e')),
+        );
+      }
     }
   }
 
@@ -128,23 +162,25 @@ class _KeyListScreenState extends State<KeyListScreen> {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    tables = [
-      TableData('Chevrolet', Colors.redAccent, [
-        KeyItemData('BSD12931'),
-        KeyItemData('DSS36472'),
-        KeyItemData('ABC12345'),
-      ]),
-      TableData('Honda', Colors.blueAccent),
-      TableData('Mercedes', Colors.green),
-      TableData('Ferrari', Colors.red, [
-        KeyItemData('BSD12931'),
-        KeyItemData('DSS36472'),
-        KeyItemData('XYZ98765'),
-      ]),
-    ];
+  Future<void> _loadTables() async {
+    try {
+      if (userId == null) {
+        print('userId é null ao carregar tabelas!'); // DEPURAÇÃO
+        return;
+      }
+      print('Buscando tabelas para userId: $userId'); // DEPURAÇÃO
+      final list = await TableService.getUserTables(userId!.toString());
+      print('Tabelas recebidas: $list'); // DEPURAÇÃO
+      setState(() {
+        tables = list.map<TableData>((t) => TableData(t['nome'], getRandomColor())).toList();
+      });
+    } catch (e) {
+      print('Erro ao carregar tabelas: $e'); // DEPURAÇÃO
+      tables = [];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar tabelas: $e')),
+      );
+    }
   }
 
   @override
