@@ -34,7 +34,7 @@ class _PropertyTile extends StatelessWidget {
         child: TextField(
           style: GoogleFonts.inter(color: Colors.white),
           decoration: InputDecoration(
-            hintText: 'vazio',
+            hintText: 'Sem valores',
             hintStyle: GoogleFonts.inter(color: Colors.white38),
             border: InputBorder.none,
           ),
@@ -89,6 +89,7 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
       ),
       builder: (context) {
         return SafeArea(
+          bottom: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -172,7 +173,8 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: Colors.white), // <-- Adicione esta linha
+        titleTextStyle: const TextStyle(
           color: Colors.white,
         ),
         title: Text(

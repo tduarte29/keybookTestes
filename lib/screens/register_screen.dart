@@ -1,8 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:keybook/service/auth_service.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      await AuthService.register(
+        nome: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,48 +53,52 @@ class RegisterScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 48),
-                Image.asset(
-                  'assets/logokeybook.png',
-                  height: 120,
-                ),
-                const SizedBox(height: 48),
-                Text(
-                  'Registre-se agora!',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 48),
+                  Image.asset('assets/logokeybook.png', height: 120),
+                  const SizedBox(height: 48),
+                  Text(
+                    'Registre-se agora!',
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 28),
-                _RegisterTextField(
-                  hintText: 'email ou username',
-                  obscureText: false,
-                ),
-                const SizedBox(height: 18),
-                _RegisterTextField(
-                  hintText: 'password',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 18),
-                _RegisterTextField(
-                  hintText: 'confirm password',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: SizedBox(
+                  const SizedBox(height: 28),
+                  _buildTextField(
+                    controller: _nameController,
+                    label: 'Nome completo',
+                    validator:
+                        (value) => value!.isEmpty ? 'Digite seu nome' : null,
+                  ),
+                  const SizedBox(height: 18),
+                  _buildTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    validator:
+                        (value) =>
+                            !value!.contains('@') ? 'Email inválido' : null,
+                  ),
+                  const SizedBox(height: 18),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: 'Senha',
+                    obscureText: true,
+                    validator:
+                        (value) =>
+                            value!.length < 6 ? 'Mínimo 6 caracteres' : null,
+                  ),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      },
+                      onPressed: _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         shape: RoundedRectangleBorder(
@@ -61,7 +106,7 @@ class RegisterScreen extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Register',
+                        'Registrar',
                         style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 16,
@@ -69,71 +114,47 @@ class RegisterScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Já possui uma conta? ',
+                  const SizedBox(height: 18),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    child: Text(
+                      'Já tem conta? Faça login',
                       style: GoogleFonts.inter(
-                        color: Colors.white70,
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      child: Text(
-                        'clique aqui.',
-                        style: GoogleFonts.inter(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
 
-// Campo de texto customizado para registro, underline sutil e sem fundo
-class _RegisterTextField extends StatelessWidget {
-  final String hintText;
-  final bool obscureText;
-
-  const _RegisterTextField({
-    required this.hintText,
-    required this.obscureText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
       obscureText: obscureText,
       style: GoogleFonts.inter(color: Colors.white),
       decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: GoogleFonts.inter(color: Colors.grey),
-        filled: false,
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey, width: 1.2),
-        ),
+        labelText: label,
+        labelStyle: GoogleFonts.inter(color: Colors.grey),
         enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey, width: 1.2),
+          borderSide: BorderSide(color: Colors.grey),
         ),
         focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue, width: 1.5),
+          borderSide: BorderSide(color: Colors.blue),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
       ),
+      validator: validator,
     );
   }
 }

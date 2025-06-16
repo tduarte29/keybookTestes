@@ -18,6 +18,7 @@ class KeybookApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       routes: AppRoutes.routes,
       theme: ThemeData(

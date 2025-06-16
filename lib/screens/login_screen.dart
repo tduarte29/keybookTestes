@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../service/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,10 +13,87 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool rememberMe = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha todos os campos')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService.login(_emailController.text, _passwordController.text);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      String errorMessage = 'Erro no login';
+
+      if (e.toString().contains('401')) {
+        errorMessage = 'Email ou senha incorretos';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Tempo de conexão esgotado';
+      } else if (e.toString().contains('Network is unreachable')) {
+        errorMessage = 'Sem conexão com a internet';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+
+    if (rememberMe) {
+      // Armazene as credenciais localmente (usando shared_preferences)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('email', _emailController.text);
+      await prefs.setString('password', _passwordController.text);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('email');
+    final password = prefs.getString('password');
+
+    if (email != null && password != null) {
+      setState(() {
+        _emailController.text = email;
+        _passwordController.text = password;
+        rememberMe = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1D1D1D),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -22,10 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 48),
-                Image.asset(
-                  'assets/logokeybook.png',
-                  height: 120,
-                ),
+                Image.asset('assets/logokeybook.png', height: 120),
                 const SizedBox(height: 48),
                 Text(
                   'Faça o seu Login!',
@@ -38,11 +115,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 28),
                 _LoginTextField(
+                  controller: _emailController,
                   hintText: 'email ou username',
                   obscureText: false,
                 ),
                 const SizedBox(height: 18),
                 _LoginTextField(
+                  controller: _passwordController,
                   hintText: 'password',
                   obscureText: true,
                 ),
@@ -50,7 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   children: [
                     Checkbox(
-                      overlayColor: WidgetStatePropertyAll(Colors.grey.shade800),
+                      overlayColor: WidgetStatePropertyAll(
+                        Colors.grey.shade800,
+                      ),
                       value: rememberMe,
                       onChanged: (value) {
                         setState(() {
@@ -71,17 +152,45 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      },
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : Text(
+                                'Login',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/home');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
                       child: Text(
-                        'Login',
+                        'Pular login',
                         style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 16,
@@ -90,7 +199,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -123,10 +231,12 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _LoginTextField extends StatelessWidget {
+  final TextEditingController controller;
   final String hintText;
   final bool obscureText;
 
   const _LoginTextField({
+    required this.controller,
     required this.hintText,
     required this.obscureText,
   });
@@ -134,6 +244,7 @@ class _LoginTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       style: GoogleFonts.inter(color: Colors.white),
       decoration: InputDecoration(
