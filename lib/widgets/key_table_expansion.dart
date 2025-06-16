@@ -11,7 +11,7 @@ class KeyTableExpansion extends StatelessWidget {
   final Function(int, String) onEditTable;
   final Function(int) onDeleteTable;
   final Function(TableData) onAddKey;
-  final Function(String) onKeyTap;
+  final Function(KeyItemData) onKeyTap;
 
   const KeyTableExpansion({
     super.key,
@@ -185,7 +185,7 @@ class KeyTableExpansion extends StatelessWidget {
                     (k) => SizedBox(
                       width: cardWidth,
                       child: GestureDetector(
-                        onTap: () => onKeyTap(k.name),
+                        onTap: () => onKeyTap(k),
                         child: item_card.KeyItemCard(
                           keyName: k.name,
                           valorCobrado: k.valorCobrado,

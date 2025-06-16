@@ -84,4 +84,42 @@ class ItemService {
       rethrow;
     }
   }
+
+  // Busca os detalhes completos de um item
+  Future<Map<String, dynamic>> getItemDetails(int itemId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/items/$itemId/details'),
+      headers: await AuthService.headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load item details');
+    }
+  }
+
+  // Atualiza um item existente
+  Future<void> updateItem({
+    required int itemId,
+    required String nome,
+    String? transponder,
+    String? tipoServico,
+    // Adicione todos os outros parâmetros aqui
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/items/$itemId'),
+      headers: await AuthService.headers,
+      body: jsonEncode({
+        'nome': nome,
+        'transponder': transponder,
+        'tipoServico': tipoServico,
+        // Inclua todos os outros campos aqui
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update item');
+    }
+  }
 }

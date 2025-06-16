@@ -250,10 +250,16 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 
-  void onKeyTap(String keyName) {
+  void onKeyTap(KeyItemData keyItem) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => KeyDetailScreen(keyName: keyName)),
+      MaterialPageRoute(
+        builder:
+            (_) => KeyDetailScreen(
+              keyName: keyItem.name,
+              itemId: keyItem.id!, // Passando o ID do item
+            ),
+      ),
     );
   }
 
