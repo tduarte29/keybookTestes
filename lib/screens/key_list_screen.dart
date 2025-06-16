@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/table_data.dart';
+import '../service/item_service.dart';
 import '../widgets/key_table_expansion.dart';
 import '../widgets/table_name_input.dart';
 import '../widgets/search_filter_bar.dart';
@@ -77,11 +78,36 @@ class _KeyListScreenState extends State<KeyListScreen> {
 
     try {
       final list = await TableService.getUserTables(userId!.toString());
-      setState(() {
-        tables =
-            list
-                .map<TableData>((t) => TableData(t['nome'], getRandomColor()))
+
+      // Carrega as tabelas e seus itens
+      final List<TableData> loadedTables = [];
+
+      for (final tableData in list) {
+        // Carrega os itens para cada tabela
+        final items = await TableService.getTableItems(
+          tableData['id'].toString(),
+        );
+
+        // Converte os itens para KeyItemData
+        final keys =
+            items
+                .map<KeyItemData>(
+                  (item) => KeyItemData(item['nome'], id: item['id']),
+                )
                 .toList();
+
+        loadedTables.add(
+          TableData(
+            tableData['nome'],
+            getRandomColor(),
+            id: tableData['id'],
+            keys: keys,
+          ),
+        );
+      }
+
+      setState(() {
+        tables = loadedTables;
       });
     } catch (e) {
       print('Erro ao carregar tabelas: $e');
@@ -100,7 +126,13 @@ class _KeyListScreenState extends State<KeyListScreen> {
     try {
       final newTable = await TableService.createTable(userId!.toString(), name);
       setState(() {
-        tables.add(TableData(newTable['nome'], getRandomColor()));
+        tables.add(
+          TableData(
+            newTable['nome'],
+            getRandomColor(),
+            id: newTable['id'], // Adicione esta linha para armazenar o ID
+          ),
+        );
         tableNameController.clear();
       });
     } catch (e) {
@@ -117,7 +149,8 @@ class _KeyListScreenState extends State<KeyListScreen> {
       tables[index] = TableData(
         newName,
         tables[index].color,
-        tables[index].keys,
+        keys: tables[index].keys,
+        id: tables[index].id, // Preserva o ID
       );
     });
   }
@@ -129,7 +162,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
   }
 
   void addKey(TableData table) {
-    final controller = TextEditingController();
+    final _keynamecontroller = TextEditingController();
     showDialog(
       context: context,
       builder:
@@ -140,7 +173,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
               style: GoogleFonts.inter(color: Colors.white),
             ),
             content: TextField(
-              controller: controller,
+              controller: _keynamecontroller,
               style: GoogleFonts.inter(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Nome da chave',
@@ -156,12 +189,50 @@ class _KeyListScreenState extends State<KeyListScreen> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {
-                  if (controller.text.trim().isNotEmpty) {
-                    setState(() {
-                      table.keys.insert(0, KeyItemData(controller.text.trim()));
-                    });
-                    Navigator.pop(context);
+                onPressed: () async {
+                  if (_keynamecontroller.text.trim().isNotEmpty) {
+                    try {
+                      final newItem = await ItemService().createItem(
+                        nome: _keynamecontroller.text.trim(),
+                        tabelaId: table.id!,
+                      );
+
+                      // Crie uma NOVA lista ao invés de modificar a existente
+                      final updatedKeys = [
+                        KeyItemData(
+                          _keynamecontroller.text.trim(),
+                          id: newItem['id'],
+                        ),
+                        ...table.keys,
+                      ];
+
+                      setState(() {
+                        // Atualize a tabela com a nova lista de chaves
+                        tables =
+                            tables.map((t) {
+                              return t.id == table.id
+                                  ? TableData(
+                                    t.name,
+                                    t.color,
+                                    keys: updatedKeys,
+                                    id: t.id,
+                                  )
+                                  : t;
+                            }).toList();
+                      });
+
+                      Navigator.pop(context);
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Erro ao criar chave: ${e.toString()}',
+                            ),
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
                 child: Text(

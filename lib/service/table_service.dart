@@ -19,7 +19,10 @@ class TableService {
   }
 
   // Criar nova tabela
-  static Future<Map<String, dynamic>> createTable(String userId, String tableName) async {
+  static Future<Map<String, dynamic>> createTable(
+    String userId,
+    String tableName,
+  ) async {
     final response = await http.post(
       Uri.parse('http://localhost:8080/users/$userId/tables'),
       headers: await AuthService.headers,
@@ -31,6 +34,19 @@ class TableService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Erro ao criar tabela');
+    }
+  }
+
+  static Future<List<dynamic>> getTableItems(String tableId) async {
+    final response = await http.get(
+      Uri.parse('http://localhost:8080/tables/$tableId/items'),
+      headers: await AuthService.headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erro ao buscar itens da tabela');
     }
   }
 
