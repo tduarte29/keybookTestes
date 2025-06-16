@@ -44,7 +44,7 @@ class KeyTableExpansion extends StatelessWidget {
         ),
       ),
       title: Text(
-        '${table.keys.length} items',
+        '${table.keys.length} ${table.keys.length == 1 ? 'item' : 'items'}',
         style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
         textAlign: TextAlign.end,
       ),
@@ -57,86 +57,115 @@ class KeyTableExpansion extends StatelessWidget {
             final controller = TextEditingController(text: table.name);
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                backgroundColor: const Color(0xFF232323),
-                title: Text('Editar Tabela', style: GoogleFonts.inter(color: Colors.white)),
-                content: TextField(
-                  controller: controller,
-                  style: GoogleFonts.inter(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Novo nome',
-                    hintStyle: GoogleFonts.inter(color: Colors.white54),
+              builder:
+                  (context) => AlertDialog(
+                    backgroundColor: const Color(0xFF232323),
+                    title: Text(
+                      'Editar Tabela',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                    content: TextField(
+                      controller: controller,
+                      style: GoogleFonts.inter(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Novo nome',
+                        hintStyle: GoogleFonts.inter(color: Colors.white54),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.inter(color: Colors.white70),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (controller.text.trim().isNotEmpty) {
+                            onEditTable(index, controller.text.trim());
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Text(
+                          'OK',
+                          style: GoogleFonts.inter(color: Colors.grey.shade900),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Cancelar', style: GoogleFonts.inter(color: Colors.white70)),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (controller.text.trim().isNotEmpty) {
-                        onEditTable(index, controller.text.trim());
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: Text('OK', style: GoogleFonts.inter(color: Colors.grey.shade900)),
-                  ),
-                ],
-              ),
             );
           } else if (value == 1) {
             // Deletar tabela
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                backgroundColor: const Color(0xFF232323),
-                title: Text('Deletar Tabela', style: GoogleFonts.inter(color: Colors.red)),
-                content: Text(
-                  'Tem certeza que deseja deletar esta tabela?',
-                  style: GoogleFonts.inter(color: Colors.white),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Cancelar', style: GoogleFonts.inter(color: Colors.white70)),
+              builder:
+                  (context) => AlertDialog(
+                    backgroundColor: const Color(0xFF232323),
+                    title: Text(
+                      'Deletar Tabela',
+                      style: GoogleFonts.inter(color: Colors.red),
+                    ),
+                    content: Text(
+                      'Tem certeza que deseja deletar esta tabela?',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.inter(color: Colors.white70),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          onDeleteTable(index);
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Deletar Tabela',
+                          style: GoogleFonts.inter(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    onPressed: () {
-                      onDeleteTable(index);
-                      Navigator.pop(context);
-                    },
-                    child: Text('Deletar Tabela', style: GoogleFonts.inter(color: Colors.white)),
-                  ),
-                ],
-              ),
             );
           }
         },
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 0,
-            child: Row(
-              children: [
-                const Icon(Icons.edit, color: Colors.white70, size: 18),
-                const SizedBox(width: 8),
-                Text('Editar Tabela', style: GoogleFonts.inter(color: Colors.white)),
-              ],
-            ),
-          ),
-          const PopupMenuDivider(),
-          PopupMenuItem(
-            value: 1,
-            child: Row(
-              children: [
-                const Icon(Icons.delete, color: Colors.red, size: 18),
-                const SizedBox(width: 8),
-                Text('Deletar Tabela', style: GoogleFonts.inter(color: Colors.red)),
-              ],
-            ),
-          ),
-        ],
+        itemBuilder:
+            (context) => [
+              PopupMenuItem(
+                value: 0,
+                child: Row(
+                  children: [
+                    const Icon(Icons.edit, color: Colors.white70, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Editar Tabela',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 1,
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, color: Colors.red, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Deletar Tabela',
+                      style: GoogleFonts.inter(color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            ],
       ),
       children: [
         Padding(
@@ -150,9 +179,7 @@ class KeyTableExpansion extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: cardWidth,
-                    child: AddKeyCard(
-                      onTap: () => onAddKey(table),
-                    ),
+                    child: AddKeyCard(onTap: () => onAddKey(table)),
                   ),
                   ...table.keys.map(
                     (k) => SizedBox(
@@ -161,6 +188,8 @@ class KeyTableExpansion extends StatelessWidget {
                         onTap: () => onKeyTap(k.name),
                         child: item_card.KeyItemCard(
                           keyName: k.name,
+                          valorCobrado: k.valorCobrado,
+                          modeloVeiculo: k.modeloVeiculo,
                           cardColor: const Color(0xFF0F0F0F),
                         ),
                       ),

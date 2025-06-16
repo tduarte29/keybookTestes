@@ -92,7 +92,12 @@ class _KeyListScreenState extends State<KeyListScreen> {
         final keys =
             items
                 .map<KeyItemData>(
-                  (item) => KeyItemData(item['nome'], id: item['id']),
+                  (item) => KeyItemData(
+                    item['nome'],
+                    id: item['id'],
+                    valorCobrado: item['valorCobrado']?.toDouble(),
+                    modeloVeiculo: item['modeloVeiculo'],
+                  ),
                 )
                 .toList();
 
@@ -318,20 +323,19 @@ class _KeyListScreenState extends State<KeyListScreen> {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView(
-                  children:
-                      filteredTables.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final table = entry.value;
-                        return KeyTableExpansion(
-                          table: table,
-                          index: index,
-                          onEditTable: editTable,
-                          onDeleteTable: deleteTable,
-                          onAddKey: addKey,
-                          onKeyTap: onKeyTap,
-                        );
-                      }).toList(),
+                child: ListView.builder(
+                  itemCount: filteredTables.length,
+                  itemBuilder: (context, tableIndex) {
+                    final table = filteredTables[tableIndex];
+                    return KeyTableExpansion(
+                      table: table,
+                      index: tableIndex,
+                      onEditTable: editTable,
+                      onDeleteTable: deleteTable,
+                      onAddKey: addKey,
+                      onKeyTap: onKeyTap,
+                    );
+                  },
                 ),
               ),
             ],

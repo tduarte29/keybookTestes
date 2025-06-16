@@ -16,7 +16,9 @@ class TableData {
 
 class KeyItemData {
   final String name;
-  final int? id; // Adicione este campo
+  final int? id;
+  final double? valorCobrado;
+  final String? modeloVeiculo;
 
-  KeyItemData(this.name, {this.id});
+  KeyItemData(this.name, {this.id, this.valorCobrado, this.modeloVeiculo});
 }
