@@ -7,16 +7,14 @@ import '../screens/key_detail_screen.dart';
 
 class KeyTableExpansion extends StatelessWidget {
   final TableData table;
-  final int index;
-  final Function(int, String) onEditTable;
-  final Function(int) onDeleteTable;
+  final Function(String, String) onEditTable; // Agora recebe ID e novo nome
+  final Function(String) onDeleteTable;
   final Function(TableData) onAddKey;
   final Function(KeyItemData) onKeyTap;
 
   const KeyTableExpansion({
     super.key,
     required this.table,
-    required this.index,
     required this.onEditTable,
     required this.onDeleteTable,
     required this.onAddKey,
@@ -83,7 +81,7 @@ class KeyTableExpansion extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           if (controller.text.trim().isNotEmpty) {
-                            onEditTable(index, controller.text.trim());
+                            onEditTable(table.id.toString(), controller.text.trim());
                             Navigator.pop(context);
                           }
                         },
@@ -123,7 +121,8 @@ class KeyTableExpansion extends StatelessWidget {
                           backgroundColor: Colors.red,
                         ),
                         onPressed: () {
-                          onDeleteTable(index);
+                          onDeleteTable(table.id.toString());// Chamando a função de deletar
+                          print("Id da tabela a ser deletada" + "Nome: " + table.name);
                           Navigator.pop(context);
                         },
                         child: Text(

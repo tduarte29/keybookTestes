@@ -124,6 +124,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
     }
   }
 
+  //CREATE TABLE
   void addTable() async {
     final name = tableNameController.text.trim();
     if (name.isEmpty || userId == null) return;
@@ -149,23 +150,53 @@ class _KeyListScreenState extends State<KeyListScreen> {
     }
   }
 
-  void editTable(int index, String newName) {
-    setState(() {
-      tables[index] = TableData(
-        newName,
-        tables[index].color,
-        keys: tables[index].keys,
-        id: tables[index].id, // Preserva o ID
+
+  //UPDATE
+  Future<void> _editTable(String tableId, String newName) async {
+    try {
+      await TableService.renameTable(tableId, newName);
+      setState(() {
+        final index = tables.indexWhere((t) => t.id.toString() == tableId);
+        if (index != -1) {
+          tables[index] = TableData(
+            newName,
+            tables[index].color,
+            keys: tables[index].keys,
+            id: tables[index].id,
+          );
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao editar tabela: ${e.toString()}')),
       );
-    });
+    }
   }
 
-  void deleteTable(int index) {
-    setState(() {
-      tables.removeAt(index);
-    });
+
+  //DELETE TABLE
+  void deleteTable(String tableId) async {
+    try {
+      // Chamar API para deletar no backend
+      await TableService.deleteTable(tableId);
+
+      // Atualizar a lista local removendo a tabela com o ID correspondente
+      setState(() {
+        tables.removeWhere((table) => table.id.toString() == tableId);
+      });
+
+      // Mostrar mensagem de sucesso
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tabela deletada com sucesso')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao deletar tabela: ${e.toString()}')),
+      );
+    }
   }
 
+  //CREATE KEY
   void addKey(TableData table) {
     final _keynamecontroller = TextEditingController();
     showDialog(
@@ -335,8 +366,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
                     final table = filteredTables[tableIndex];
                     return KeyTableExpansion(
                       table: table,
-                      index: tableIndex,
-                      onEditTable: editTable,
+                      onEditTable: (id, newName) => _editTable(id, newName),
                       onDeleteTable: deleteTable,
                       onAddKey: addKey,
                       onKeyTap: onKeyTap,

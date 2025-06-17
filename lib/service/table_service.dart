@@ -68,8 +68,9 @@ class TableService {
       Uri.parse('$_baseUrl/$tableId'),
       headers: await AuthService.headers,
     );
+
     if (response.statusCode != 204) {
-      throw Exception('Erro ao excluir tabela');
+      throw Exception('Erro ao excluir tabela: ${response.statusCode}');
     }
   }
 }
