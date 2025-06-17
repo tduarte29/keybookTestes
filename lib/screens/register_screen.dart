@@ -13,12 +13,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -34,7 +36,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        // Mostra mensagem de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Registro realizado com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Redireciona para a tela de login
+        Navigator.pushReplacementNamed(context, '/login');
       }
     } catch (e) {
       if (mounted) {
@@ -82,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     label: 'Email',
                     validator:
                         (value) =>
-                            !value!.contains('@') ? 'Email inválido' : null,
+                    !value!.contains('@') ? 'Email inválido' : null,
                   ),
                   const SizedBox(height: 18),
                   _buildTextField(
@@ -91,7 +102,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     obscureText: true,
                     validator:
                         (value) =>
-                            value!.length < 6 ? 'Mínimo 6 caracteres' : null,
+                    value!.length < 6 ? 'Mínimo 6 caracteres' : null,
+                  ),
+                  const SizedBox(height: 18),
+                  _buildTextField(
+                    controller: _confirmPasswordController,
+                    label: 'Confirmar Senha',
+                    obscureText: true,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Confirme sua senha';
+                      }
+                      if (value != _passwordController.text) {
+                        return 'As senhas não coincidem';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 28),
                   SizedBox(
