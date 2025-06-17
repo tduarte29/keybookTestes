@@ -39,7 +39,7 @@ class TableService {
 
   static Future<List<dynamic>> getTableItems(String tableId) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8080/tables/$tableId/items'),
+      Uri.parse('$_baseUrl/$tableId/items'),
       headers: await AuthService.headers,
     );
 
@@ -50,15 +50,20 @@ class TableService {
     }
   }
 
-  // Renomear tabela
+
+  // Renomear tabela - Corrigido para usar 'nome' ao invés de 'name'
   static Future<void> renameTable(String tableId, String newName) async {
     final response = await http.put(
       Uri.parse('$_baseUrl/$tableId'),
       headers: await AuthService.headers,
-      body: jsonEncode({'name': newName}),
+      body: jsonEncode({'nome': newName}), // Alterado para 'nome'
     );
+
+    print('Status ao renomear tabela: ${response.statusCode}');
+    print('Body ao renomear tabela: ${response.body}');
+
     if (response.statusCode != 200) {
-      throw Exception('Erro ao renomear tabela');
+      throw Exception('Erro ao renomear tabela: ${response.statusCode}');
     }
   }
 
@@ -73,4 +78,6 @@ class TableService {
       throw Exception('Erro ao excluir tabela: ${response.statusCode}');
     }
   }
+
+
 }

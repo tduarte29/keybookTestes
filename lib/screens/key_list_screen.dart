@@ -154,7 +154,9 @@ class _KeyListScreenState extends State<KeyListScreen> {
   //UPDATE
   Future<void> _editTable(String tableId, String newName) async {
     try {
+      print('Tentando renomear tabela $tableId para $newName');
       await TableService.renameTable(tableId, newName);
+
       setState(() {
         final index = tables.indexWhere((t) => t.id.toString() == tableId);
         if (index != -1) {
@@ -166,7 +168,12 @@ class _KeyListScreenState extends State<KeyListScreen> {
           );
         }
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tabela renomeada com sucesso')),
+      );
     } catch (e) {
+      print('Erro ao editar tabela: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao editar tabela: ${e.toString()}')),
       );
