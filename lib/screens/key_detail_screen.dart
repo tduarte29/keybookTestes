@@ -1,12 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../service/item_service.dart';
 
+class Debouncer {
+  final int milliseconds;
+  VoidCallback? action;
+  Timer? _timer;
+
+  Debouncer({required this.milliseconds});
+
+  run(VoidCallback action) {
+    _timer?.cancel();
+    _timer = Timer(Duration(milliseconds: milliseconds), action);
+  }
+}
+
 class KeyDetailScreen extends StatefulWidget {
   final String keyName;
-  final int itemId; // Adicionamos o ID do item para buscar os detalhes
+  final int itemId;
 
   const KeyDetailScreen({
     super.key,
@@ -24,6 +39,8 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
   late Future<Map<String, dynamic>> _itemDetails;
   final TextEditingController _obsController = TextEditingController();
   final Map<String, TextEditingController> _controllers = {};
+  final _debounce = Debouncer(milliseconds: 1000);
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -112,7 +129,7 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () async {
                   try {
-                    Navigator.pop(context); // Fecha o diálogo primeiro
+                    Navigator.pop(context);
 
                     // Mostra feedback visual
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -164,12 +181,67 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
             hintStyle: GoogleFonts.inter(color: Colors.white38),
             border: InputBorder.none,
           ),
-          onChanged: (val) {
-            // Aqui você pode implementar a atualização no backend
+          onChanged: (val) async {
+            if (_isEditing) return;
+
+            _isEditing = true;
+            _debounce.run(() async {
+              try {
+                await _saveChanges();
+                // if (mounted) {
+                //   ScaffoldMessenger.of(context).showSnackBar(
+                //     SnackBar(
+                //       content: Text('$label atualizado com sucesso'),
+                //       duration: const Duration(seconds: 1),
+                //     ),
+                //   );
+                // }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Erro ao atualizar $label: ${e.toString()}',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } finally {
+                _isEditing = false;
+              }
+            });
           },
         ),
       ),
       dense: true,
+    );
+  }
+
+  Future<void> _saveChanges() async {
+    final itemData = await _itemDetails;
+
+    await ItemService().updateItem(
+      itemId: widget.itemId,
+      nome: _controllers['Nome']?.text ?? itemData['nome'],
+      transponder: _controllers['Transponder']?.text ?? itemData['transponder'],
+      tipoServico:
+          _controllers['Tipo de Serviço']?.text ?? itemData['tipoServico'],
+      anoVeiculo:
+          _controllers['Ano do Veículo']?.text ?? itemData['anoVeiculo'],
+      valorCobrado:
+          double.tryParse(_controllers['Valor Cobrado']?.text ?? '') ??
+          itemData['valorCobrado'],
+      marcaVeiculo:
+          _controllers['Marca do Veículo']?.text ?? itemData['marcaVeiculo'],
+      modeloVeiculo:
+          _controllers['Modelo do Veículo']?.text ?? itemData['modeloVeiculo'],
+      tipoChave: _controllers['Tipo de Chave']?.text ?? itemData['tipoChave'],
+      fornecedor: _controllers['Fornecedor']?.text ?? itemData['fornecedor'],
+      dataConstrucao:
+          _controllers['Data de Construção']?.text ??
+          itemData['dataConstrucao'],
+      observacoes: _obsController.text,
     );
   }
 
@@ -184,43 +256,14 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
         backgroundColor: const Color(0xFF232323),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          //Botão exportar página em pdf
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.white),
+            icon: const Icon(Icons.share, color: Colors.white),
             onPressed: () async {
-              // Implementar lógica para salvar todas as alterações
-              try {
-                // Criar objeto com os dados atualizados
-                final updatedData = {
-                  'nome': _controllers['Nome']?.text ?? widget.keyName,
-                  'transponder': _controllers['Transponder']?.text,
-                  'tipoServico': _controllers['Tipo de Serviço']?.text,
-                  // Adicione todos os outros campos aqui
-                  'observacoes': _obsController.text,
-                };
-
-                // Chamar o serviço para atualizar
-                await ItemService().updateItem(
-                  itemId: widget.itemId,
-                  nome: _controllers['Nome']?.text ?? widget.keyName,
-                  transponder: _controllers['Transponder']?.text,
-                  tipoServico: _controllers['Tipo de Serviço']?.text,
-                  // Passe todos os outros campos aqui
-                );
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Chave atualizada com sucesso!'),
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Erro ao atualizar chave: ${e.toString()}'),
-                  ),
-                );
-              }
+              // Implementar lógica para exportar pdf
             },
           ),
+          //Botão deletar chave
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: _showDeleteDialog,
@@ -264,7 +307,7 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
                 ),
               ),
 
-              // Seção de propriedades
+              // Seção de detalhes da chave
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -348,6 +391,19 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
                         filled: true,
                         border: InputBorder.none,
                       ),
+                      onChanged: (val) {
+                        _debounce.run(() async {
+                          await _saveChanges();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Observações atualizadas'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        });
+                      },
                     ),
                   ],
                 ),

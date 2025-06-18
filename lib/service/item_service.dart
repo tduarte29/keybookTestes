@@ -107,19 +107,42 @@ class ItemService {
     required String nome,
     String? transponder,
     String? tipoServico,
+    String? anoVeiculo,
+    double? valorCobrado,
+    String? marcaVeiculo,
+    String? modeloVeiculo,
+    String? tipoChave,
+    String? fornecedor,
+    String? dataConstrucao,
+    String? observacoes,
   }) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/items/$itemId'),
-      headers: await AuthService.headers,
-      body: jsonEncode({
-        'nome': nome,
-        'transponder': transponder,
-        'tipoServico': tipoServico,
-      }),
-    );
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/items/$itemId/details'),
+        headers: await AuthService.headers,
+        body: jsonEncode({
+          'nome': nome,
+          'transponder': transponder,
+          'tipoServico': tipoServico,
+          'anoVeiculo': anoVeiculo,
+          'valorCobrado': valorCobrado,
+          'marcaVeiculo': marcaVeiculo,
+          'modeloVeiculo': modeloVeiculo,
+          'tipoChave': tipoChave,
+          'fornecedor': fornecedor,
+          'dataConstrucao': dataConstrucao,
+          'observacoes': observacoes,
+        }),
+      );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update item');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update item: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error updating item: $e');
+      }
+      rethrow;
     }
   }
 }
