@@ -112,17 +112,28 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () async {
                   try {
+                    Navigator.pop(context); // Fecha o diálogo primeiro
+
+                    // Mostra feedback visual
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Deletando chave...')),
+                    );
+
                     await ItemService().deleteItem(widget.itemId);
-                    Navigator.pop(context);
-                    Navigator.pop(
-                      context,
-                      true,
-                    ); // Retorna indicando que o item foi deletado
+
+                    // Remove o feedback visual
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                    // Retorna indicando que o item foi deletado
+                    if (mounted) {
+                      Navigator.pop(context, true);
+                    }
                   } catch (e) {
-                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Erro ao deletar chave: ${e.toString()}'),
+                        backgroundColor: Colors.red,
                       ),
                     );
                   }

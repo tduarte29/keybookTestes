@@ -72,7 +72,9 @@ class ItemService {
   Future<void> deleteItem(int itemId) async {
     try {
       final url = Uri.parse('$baseUrl/items/$itemId');
-      final response = await http.delete(url);
+      final headers = await AuthService.headers;
+
+      final response = await http.delete(url, headers: headers);
 
       if (response.statusCode != 204) {
         throw Exception('Failed to delete item: ${response.statusCode}');
@@ -105,7 +107,6 @@ class ItemService {
     required String nome,
     String? transponder,
     String? tipoServico,
-    // Adicione todos os outros parâmetros aqui
   }) async {
     final response = await http.put(
       Uri.parse('$baseUrl/items/$itemId'),
@@ -114,7 +115,6 @@ class ItemService {
         'nome': nome,
         'transponder': transponder,
         'tipoServico': tipoServico,
-        // Inclua todos os outros campos aqui
       }),
     );
 

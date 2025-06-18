@@ -43,7 +43,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
 
   Future<void> _loadUserAndTables() async {
     try {
-      // 1. Obter o userId
       userId = await AuthService.getUserId();
       print('UserId obtido: $userId');
 
@@ -57,7 +56,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
         return;
       }
 
-      // 2. Carregar tabelas
       await _loadTables();
     } catch (e) {
       print('Erro ao carregar dados: $e');
@@ -79,41 +77,34 @@ class _KeyListScreenState extends State<KeyListScreen> {
     try {
       final list = await TableService.getUserTables(userId!.toString());
 
-      // Carrega as tabelas e seus itens
-      final List<TableData> loadedTables = [];
+      final loadedTables = await Future.wait(
+        list.map((tableData) async {
+          final items = await TableService.getTableItems(
+            tableData['id'].toString(),
+          );
 
-      for (final tableData in list) {
-        // Carrega os itens para cada tabela
-        final items = await TableService.getTableItems(
-          tableData['id'].toString(),
-        );
+          final keys =
+              items
+                  .map<KeyItemData>(
+                    (item) => KeyItemData(
+                      item['nome'],
+                      id: item['id'],
+                      valorCobrado: item['valorCobrado']?.toDouble(),
+                      modeloVeiculo: item['modeloVeiculo'],
+                    ),
+                  )
+                  .toList();
 
-        // Converte os itens para KeyItemData
-        final keys =
-            items
-                .map<KeyItemData>(
-                  (item) => KeyItemData(
-                    item['nome'],
-                    id: item['id'],
-                    valorCobrado: item['valorCobrado']?.toDouble(),
-                    modeloVeiculo: item['modeloVeiculo'],
-                  ),
-                )
-                .toList();
-
-        loadedTables.add(
-          TableData(
+          return TableData(
             tableData['nome'],
             getRandomColor(),
             id: tableData['id'],
             keys: keys,
-          ),
-        );
-      }
+          );
+        }),
+      );
 
-      setState(() {
-        tables = loadedTables;
-      });
+      setState(() => tables = loadedTables);
     } catch (e) {
       print('Erro ao carregar tabelas: $e');
       if (mounted) {
@@ -150,7 +141,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
     }
   }
 
-
   //UPDATE
   Future<void> _editTable(String tableId, String newName) async {
     try {
@@ -179,7 +169,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
       );
     }
   }
-
 
   //DELETE TABLE
   void deleteTable(String tableId) async {
@@ -288,17 +277,28 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 
-  void onKeyTap(KeyItemData keyItem) {
-    Navigator.push(
+  void onKeyTap(KeyItemData keyItem) async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder:
-            (_) => KeyDetailScreen(
-              keyName: keyItem.name,
-              itemId: keyItem.id!, // Passando o ID do item
-            ),
+            (_) => KeyDetailScreen(keyName: keyItem.name, itemId: keyItem.id!),
       ),
     );
+
+    // Se result for true, significa que a chave foi deletada
+    if (result == true) {
+      // Atualiza a lista de tabelas
+      await _loadTables();
+
+      // Mostra feedback visual
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chave deletada com sucesso'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   List<TableData> get filteredTables {
