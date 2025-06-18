@@ -128,15 +128,75 @@ class AuthService {
     };
   }
 
-  // Método para obter o token (se necessário)
-  // static Future<String?> getToken() async {
-  //   if (_token == null) {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     _token = prefs.getString('auth_token');
-  //   }
-  //   return _token;
-  // }
+  //READ USER
+  static Future<Map<String, dynamic>> getUserDetails({
+    bool forceRefresh = false,
+  }) async {
+    try {
+      final userId = await getUserId();
+      if (userId == null) throw Exception('Usuário não autenticado');
 
+      // Se não for forçar refresh e já tiver dados em cache
+      if (!forceRefresh && _cachedUserDetails != null) {
+        return _cachedUserDetails!;
+      }
+
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/users/$userId'),
+        headers: await headers,
+      );
+
+      if (response.statusCode == 200) {
+        _cachedUserDetails = jsonDecode(response.body);
+        return _cachedUserDetails!;
+      } else {
+        throw Exception('Failed to load user details');
+      }
+    } catch (e) {
+      debugPrint('Error getting user details: $e');
+      rethrow;
+    }
+  }
+
+  static Map<String, dynamic>? _cachedUserDetails;
+
+  static Future<void> clearUserCache() async {
+    _cachedUserDetails = null;
+  }
+
+  //UPDATE USER
+  static Future<void> updateUser({
+    required String nome,
+    required String email,
+    String? password,
+  }) async {
+    try {
+      final userId = await getUserId();
+      if (userId == null) throw Exception('Usuário não autenticado');
+
+      final response = await http.put(
+        Uri.parse('http://localhost:8080/users/$userId'),
+        headers: await headers,
+        body: jsonEncode({
+          'nome': nome,
+          'email': email,
+          if (password != null && password.isNotEmpty) 'password': password,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update user: ${response.statusCode}');
+      }
+
+      // Limpa o cache após atualização
+      await clearUserCache();
+    } catch (e) {
+      debugPrint('Error updating user: $e');
+      rethrow;
+    }
+  }
+
+  //DELETE USER
   static Future<void> deleteAccount() async {
     try {
       final userId = await getUserId();
@@ -150,13 +210,6 @@ class AuthService {
       if (response.statusCode != 204) {
         throw Exception('Falha ao deletar conta: ${response.statusCode}');
       }
-
-      // Limpar dados locais mesmo se a requisição falhar
-      // _token = null;
-      // _userId = null;
-      // final prefs = await SharedPreferences.getInstance();
-      // await prefs.remove('auth_token');
-      // await prefs.remove('user_id');
     } catch (e) {
       debugPrint('Erro ao deletar conta: $e');
       rethrow;
