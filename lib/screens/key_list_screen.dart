@@ -281,17 +281,15 @@ class _KeyListScreenState extends State<KeyListScreen> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => KeyDetailScreen(keyName: keyItem.name, itemId: keyItem.id!),
+        builder: (_) => KeyDetailScreen(keyName: keyItem.name, itemId: keyItem.id!),
       ),
     );
 
-    // Se result for true, significa que a chave foi deletada
-    if (result == true) {
-      // Atualiza a lista de tabelas
-      await _loadTables();
+    // Sempre atualiza a lista ao voltar da tela de detalhes
+    await _loadTables();
 
-      // Mostra feedback visual
+    // Se deletou, mostra feedback visual
+    if (result == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chave deletada com sucesso'),
