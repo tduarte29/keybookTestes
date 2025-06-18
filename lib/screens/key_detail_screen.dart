@@ -249,22 +249,7 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
   }
 
   void _handleMonetaryChange(String label, String value) {
-    // Formata o valor enquanto digita
-    if (value.isNotEmpty) {
-      final cursorPos = _controllers[label]!.selection.base.offset;
-      final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
-
-      double valueAsDouble = (int.tryParse(cleanValue) ?? 0) / 100;
-      String formattedValue = valueAsDouble
-          .toStringAsFixed(2)
-          .replaceAll('.', ',');
-
-      _controllers[label]!.text = formattedValue;
-      _controllers[label]!.selection = TextSelection.collapsed(
-        offset: min(cursorPos ?? 0, formattedValue.length),
-      );
-    }
-
+    // Não formate automaticamente, só salve ao sair do campo
     _handleFieldChange(label);
   }
 
@@ -306,12 +291,13 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
   double? _parseValorCobrado(String value) {
     if (value.isEmpty) return null;
 
-    // Remove caracteres não numéricos (como R$, espaços, etc.)
-    final cleanValue = value
-        .replaceAll(RegExp(r'[^0-9,]'), '')
-        .replaceAll(',', '.');
+    // Remove caracteres não numéricos exceto vírgula e ponto
+    final cleanValue = value.replaceAll(RegExp(r'[^0-9,\.]'), '');
 
-    return double.tryParse(cleanValue);
+    // Troca vírgula por ponto para o backend
+    final normalized = cleanValue.replaceAll(',', '.');
+
+    return double.tryParse(normalized);
   }
 
   @override
@@ -404,8 +390,11 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
                     ),
                     _buildPropertyTile(
                       'Valor Cobrado',
-                      itemData['valorCobrado']?.toString(),
+                      itemData['valorCobrado'] != null
+                          ? itemData['valorCobrado'].toString().replaceAll('.', ',')
+                          : null,
                       Icons.attach_money,
+                      isMonetary: true,
                     ),
                     _buildPropertyTile(
                       'Marca do Veículo',
