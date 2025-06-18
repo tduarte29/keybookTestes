@@ -129,11 +129,37 @@ class AuthService {
   }
 
   // Método para obter o token (se necessário)
-  static Future<String?> getToken() async {
-    if (_token == null) {
-      final prefs = await SharedPreferences.getInstance();
-      _token = prefs.getString('auth_token');
+  // static Future<String?> getToken() async {
+  //   if (_token == null) {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     _token = prefs.getString('auth_token');
+  //   }
+  //   return _token;
+  // }
+
+  static Future<void> deleteAccount() async {
+    try {
+      final userId = await getUserId();
+      if (userId == null) throw Exception('Usuário não autenticado');
+
+      final response = await http.delete(
+        Uri.parse('http://localhost:8080/users/$userId'),
+        headers: await headers,
+      );
+
+      if (response.statusCode != 204) {
+        throw Exception('Falha ao deletar conta: ${response.statusCode}');
+      }
+
+      // Limpar dados locais mesmo se a requisição falhar
+      // _token = null;
+      // _userId = null;
+      // final prefs = await SharedPreferences.getInstance();
+      // await prefs.remove('auth_token');
+      // await prefs.remove('user_id');
+    } catch (e) {
+      debugPrint('Erro ao deletar conta: $e');
+      rethrow;
     }
-    return _token;
   }
 }

@@ -210,10 +210,9 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () {
+                onPressed: () async {
                   Navigator.pop(context);
-                  // TODO: Implementar deleção real da conta
-                  Navigator.pushReplacementNamed(context, '/login');
+                  await _performAccountDeletion(context);
                 },
                 child: Text(
                   'Deletar',
@@ -223,6 +222,37 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
             ],
           ),
     );
+  }
+
+  Future<void> _performAccountDeletion(BuildContext context) async {
+    final scaffold = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      scaffold.showSnackBar(
+        const SnackBar(content: Text('Deletando conta...')),
+      );
+
+      await AuthService.deleteAccount();
+
+      scaffold.hideCurrentSnackBar();
+      scaffold.showSnackBar(
+        const SnackBar(
+          content: Text('Conta deletada com sucesso'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      navigator.pushNamedAndRemoveUntil('/login', (route) => false);
+    } catch (e) {
+      scaffold.hideCurrentSnackBar();
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text('Erro ao deletar conta: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showImagePickerOptions() async {
