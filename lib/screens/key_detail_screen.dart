@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -165,7 +166,20 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
     );
   }
 
-  Widget _buildPropertyTile(String label, String? value, IconData icon) {
+  // _buildPropertyTile(
+  // 'Valor Cobrado',
+  // itemData['valorCobrado']?.toString(),
+  // Icons.attach_money,
+  // isMonetary: true,
+  // ),
+
+  // E atualize o método _buildPropertyTile:
+  Widget _buildPropertyTile(
+    String label,
+    String? value,
+    IconData icon, {
+    bool isMonetary = false,
+  }) {
     _controllers[label] = TextEditingController(text: value ?? '');
 
     return ListTile(
@@ -173,76 +187,131 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
       title: Text(label, style: GoogleFonts.inter(color: Colors.white)),
       trailing: SizedBox(
         width: 180,
-        child: TextField(
-          controller: _controllers[label],
-          style: GoogleFonts.inter(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Não informado',
-            hintStyle: GoogleFonts.inter(color: Colors.white38),
-            border: InputBorder.none,
-          ),
-          onChanged: (val) async {
-            if (_isEditing) return;
-
-            _isEditing = true;
-            _debounce.run(() async {
-              try {
-                await _saveChanges();
-                // if (mounted) {
-                //   ScaffoldMessenger.of(context).showSnackBar(
-                //     SnackBar(
-                //       content: Text('$label atualizado com sucesso'),
-                //       duration: const Duration(seconds: 1),
-                //     ),
-                //   );
-                // }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Erro ao atualizar $label: ${e.toString()}',
-                      ),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } finally {
-                _isEditing = false;
-              }
-            });
-          },
-        ),
+        child:
+            isMonetary
+                ? TextField(
+                  controller: _controllers[label],
+                  style: GoogleFonts.inter(color: Colors.white),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    hintText: '0,00',
+                    hintStyle: GoogleFonts.inter(color: Colors.white38),
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (val) {
+                    _handleMonetaryChange(label, val);
+                  },
+                )
+                : TextField(
+                  controller: _controllers[label],
+                  style: GoogleFonts.inter(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Não informado',
+                    hintStyle: GoogleFonts.inter(color: Colors.white38),
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (val) => _handleFieldChange(label),
+                ),
       ),
       dense: true,
     );
   }
 
+  void _handleFieldChange(String label) {
+    if (_isEditing) return;
+
+    _isEditing = true;
+    _debounce.run(() async {
+      try {
+        await _saveChanges();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$label atualizado com sucesso'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Erro ao atualizar $label: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao atualizar $label'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        _isEditing = false;
+      }
+    });
+  }
+
+  void _handleMonetaryChange(String label, String value) {
+    // Formata o valor enquanto digita
+    if (value.isNotEmpty) {
+      final cursorPos = _controllers[label]!.selection.base.offset;
+      final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+
+      double valueAsDouble = (int.tryParse(cleanValue) ?? 0) / 100;
+      String formattedValue = valueAsDouble
+          .toStringAsFixed(2)
+          .replaceAll('.', ',');
+
+      _controllers[label]!.text = formattedValue;
+      _controllers[label]!.selection = TextSelection.collapsed(
+        offset: min(cursorPos ?? 0, formattedValue.length),
+      );
+    }
+
+    _handleFieldChange(label);
+  }
+
   Future<void> _saveChanges() async {
     final itemData = await _itemDetails;
 
-    await ItemService().updateItem(
-      itemId: widget.itemId,
-      nome: _controllers['Nome']?.text ?? itemData['nome'],
-      transponder: _controllers['Transponder']?.text ?? itemData['transponder'],
-      tipoServico:
-          _controllers['Tipo de Serviço']?.text ?? itemData['tipoServico'],
-      anoVeiculo:
-          _controllers['Ano do Veículo']?.text ?? itemData['anoVeiculo'],
-      valorCobrado:
-          double.tryParse(_controllers['Valor Cobrado']?.text ?? '') ??
-          itemData['valorCobrado'],
-      marcaVeiculo:
-          _controllers['Marca do Veículo']?.text ?? itemData['marcaVeiculo'],
-      modeloVeiculo:
-          _controllers['Modelo do Veículo']?.text ?? itemData['modeloVeiculo'],
-      tipoChave: _controllers['Tipo de Chave']?.text ?? itemData['tipoChave'],
-      fornecedor: _controllers['Fornecedor']?.text ?? itemData['fornecedor'],
-      dataConstrucao:
-          _controllers['Data de Construção']?.text ??
-          itemData['dataConstrucao'],
-      observacoes: _obsController.text,
-    );
+    try {
+      await ItemService().updateItem(
+        itemId: widget.itemId,
+        nome: _controllers['Nome']?.text ?? itemData['nome'],
+        transponder:
+            _controllers['Transponder']?.text ?? itemData['transponder'],
+        tipoServico:
+            _controllers['Tipo de Serviço']?.text ?? itemData['tipoServico'],
+        anoVeiculo:
+            _controllers['Ano do Veículo']?.text ?? itemData['anoVeiculo'],
+        valorCobrado: _parseValorCobrado(
+          _controllers['Valor Cobrado']?.text ??
+              itemData['valorCobrado']!.toString(),
+        ),
+        marcaVeiculo:
+            _controllers['Marca do Veículo']?.text ?? itemData['marcaVeiculo'],
+        modeloVeiculo:
+            _controllers['Modelo do Veículo']?.text ??
+            itemData['modeloVeiculo'],
+        tipoChave: _controllers['Tipo de Chave']?.text ?? itemData['tipoChave'],
+        fornecedor: _controllers['Fornecedor']?.text ?? itemData['fornecedor'],
+        dataConstrucao:
+            _controllers['Data de Construção']?.text ??
+            itemData['dataConstrucao'],
+        observacoes: _obsController.text,
+      );
+    } catch (e) {
+      debugPrint('Erro ao salvar valor: $e');
+      rethrow;
+    }
+  }
+
+  double? _parseValorCobrado(String value) {
+    if (value.isEmpty) return null;
+
+    // Remove caracteres não numéricos (como R$, espaços, etc.)
+    final cleanValue = value
+        .replaceAll(RegExp(r'[^0-9,]'), '')
+        .replaceAll(',', '.');
+
+    return double.tryParse(cleanValue);
   }
 
   @override

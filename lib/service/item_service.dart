@@ -116,33 +116,29 @@ class ItemService {
     String? dataConstrucao,
     String? observacoes,
   }) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/items/$itemId/details'),
-        headers: await AuthService.headers,
-        body: jsonEncode({
-          'nome': nome,
-          'transponder': transponder,
-          'tipoServico': tipoServico,
-          'anoVeiculo': anoVeiculo,
-          'valorCobrado': valorCobrado,
-          'marcaVeiculo': marcaVeiculo,
-          'modeloVeiculo': modeloVeiculo,
-          'tipoChave': tipoChave,
-          'fornecedor': fornecedor,
-          'dataConstrucao': dataConstrucao,
-          'observacoes': observacoes,
-        }),
-      );
+    final response = await http.put(
+      Uri.parse('$baseUrl/items/$itemId/details'),
+      headers: await AuthService.headers,
+      body: jsonEncode({
+        'nome': nome,
+        'transponder': transponder,
+        'tipoServico': tipoServico,
+        'anoVeiculo': anoVeiculo,
+        'valorCobrado': valorCobrado,
+        'marcaVeiculo': marcaVeiculo,
+        'modeloVeiculo': modeloVeiculo,
+        'tipoChave': tipoChave,
+        'fornecedor': fornecedor,
+        'dataConstrucao': dataConstrucao,
+        'observacoes': observacoes,
+      }),
+    );
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update item: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error updating item: $e');
-      }
-      rethrow;
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update item: ${response.statusCode}');
     }
   }
 }
