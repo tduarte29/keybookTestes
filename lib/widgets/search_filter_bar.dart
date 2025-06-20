@@ -105,16 +105,6 @@ class SearchFilterBar extends StatelessWidget {
                   ],
                 ),
               ),
-              PopupMenuItem(
-                value: 4,
-                child: Row(
-                  children: [
-                    const Icon(Icons.vpn_key, color: Colors.white, size: 18),
-                    const SizedBox(width: 8),
-                    Text('Filtrar por Propriedade Importante', style: GoogleFonts.inter(color: Colors.white)),
-                  ],
-                ),
-              ),
             ],
           ),
         ],

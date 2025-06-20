@@ -3,10 +3,17 @@ import 'package:flutter/material.dart';
 class TableData {
   final String name;
   final Color color;
-  List<KeyItemData> keys;
+  final List<KeyItemData> keys;
   final int? id;
+  final DateTime? dataCriacao; // <-- Adicione isso
 
-  TableData(this.name, this.color, {this.keys = const [], this.id});
+  TableData(
+    this.name,
+    this.color, {
+    this.keys = const [],
+    this.id,
+    this.dataCriacao, // <-- Adicione isso
+  });
 
   // Adicione um método para atualizar chaves
   TableData copyWith({List<KeyItemData>? keys}) {

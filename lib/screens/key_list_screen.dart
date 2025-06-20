@@ -107,6 +107,9 @@ class _KeyListScreenState extends State<KeyListScreen> {
             getRandomColor(),
             id: tableData['id'],
             keys: keys,
+            dataCriacao: tableData['dataCriacao'] != null
+                ? DateTime.tryParse(tableData['dataCriacao'])
+                : null,
           );
         }),
       );
@@ -328,18 +331,19 @@ class _KeyListScreenState extends State<KeyListScreen> {
             .toList();
 
     switch (_filterOption) {
-      case 0:
+      case 0: // Ordem Alfabética (A-Z)
         filtered.sort((a, b) => a.name.compareTo(b.name));
         break;
-      case 1:
+      case 1: // Ordem Alfabética (Z-A)
         filtered.sort((a, b) => b.name.compareTo(a.name));
         break;
-      case 2:
+      case 2: // Mais Recentes
+        filtered.sort((a, b) =>
+          (b.dataCriacao ?? DateTime(0)).compareTo(a.dataCriacao ?? DateTime(0)));
         break;
-      case 3:
-        filtered = filtered.reversed.toList();
-        break;
-      case 4:
+      case 3: // Mais Antigas
+        filtered.sort((a, b) =>
+          (a.dataCriacao ?? DateTime(0)).compareTo(b.dataCriacao ?? DateTime(0)));
         break;
     }
     return filtered;
