@@ -48,12 +48,12 @@ class AuthService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print('Resposta do login: ${response.body}'); // Adicione para debug
+      print('Resposta do login: ${response.body}'); // Debug
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _token = data['token'];
-        _userId = data['userId']; // Verifique se a chave está correta
+        _userId = data['userId'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', _token!);
@@ -87,7 +87,7 @@ class AuthService {
   // Logout
   static Future<void> logout() async {
     try {
-      // 1. Tenta chamar o endpoint de logout
+      // Tenta chamar o endpoint de logout (opcional)
       await http.post(
         Uri.parse('$_baseUrl/logout'),
         headers: {
@@ -98,9 +98,10 @@ class AuthService {
     } catch (e) {
       debugPrint('Erro ao chamar logout no backend: $e');
     } finally {
-      // 2. Limpeza local garantida
+      // Limpeza local garantida
       _token = null;
       _userId = null;
+      _cachedUserDetails = null;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       await prefs.remove('user_id');

@@ -50,9 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('password', _passwordController.text);
       }
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+      await AuthService.clearUserCache();
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

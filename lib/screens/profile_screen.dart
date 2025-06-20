@@ -13,12 +13,19 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late Future<Map<String, dynamic>> _userDetails;
+  late Future<Map<String, dynamic>> _userDetails = AuthService.getUserDetails();
 
   @override
   void initState() {
     super.initState();
-    _userDetails = AuthService.getUserDetails();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final userDetails = await AuthService.getUserDetails();
+    setState(() {
+      _userDetails = Future.value(userDetails);
+    });
   }
 
   void _showLogoutDialog(BuildContext context) {
@@ -358,11 +365,25 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
       await AuthService.updateUser(
         nome: usernameController.text,
         email: emailController.text,
-        password:
-            isEditingPassword && passwordController.text != '********'
-                ? passwordController.text
-                : null,
+        password: isEditingPassword && passwordController.text != '********'
+            ? passwordController.text
+            : null,
       );
+
+      // Se o email foi alterado, faça logout e peça novo login
+      if (emailController.text != widget.userData['email']) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email alterado! Faça login novamente.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          await AuthService.logout();
+          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          return;
+        }
+      }
 
       if (mounted) {
         // Atualiza os dados locais após salvar
@@ -423,7 +444,25 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
         body: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           children: [
-            //Avatar
+            // Avatar do usuário
+            const SizedBox(height: 24),
+            Center(
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF232323),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white38,
+                    size: 50,
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
             TextField(
               controller: usernameController,
@@ -497,7 +536,22 @@ class _ProfileDetailsScreenState extends State<ProfileDetailsScreen> {
                 }
               },
             ),
-            // ... (resto do código permanece igual) ...
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.delete, color: Colors.white),
+              label: Text(
+                'Deletar Conta',
+                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              onPressed: _showDeleteAccountDialog,
+            ),
           ],
         ),
       ),
