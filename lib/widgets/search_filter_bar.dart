@@ -29,17 +29,35 @@ class SearchFilterBar extends StatelessWidget {
           const Icon(Icons.search, color: Colors.white54, size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: TextField(
-              controller: controller,
-              style: GoogleFonts.inter(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Pesquisar items',
-                hintStyle: GoogleFonts.inter(color: Colors.white54),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              onChanged: onChanged,
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return TextField(
+                  controller: controller,
+                  style: GoogleFonts.inter(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Pesquisar items',
+                    hintStyle: GoogleFonts.inter(color: Colors.white54),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    alignLabelWithHint: true,
+                    suffixIcon: controller.text.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () {
+                              controller.clear();
+                              onChanged('');
+                              setState(() {});
+                            },
+                            child: const Icon(Icons.clear, color: Colors.white54, size: 18),
+                          )
+                        : null,
+                  ),
+                  onChanged: (value) {
+                    onChanged(value);
+                    setState(() {});
+                  },
+                );
+              },
             ),
           ),
           PopupMenuButton<int>(

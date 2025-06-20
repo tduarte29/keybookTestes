@@ -17,6 +17,13 @@ class KeyListScreen extends StatefulWidget {
   State<KeyListScreen> createState() => _KeyListScreenState();
 }
 
+// Classe auxiliar para sugestão de chave
+class _KeySuggestion {
+  final KeyItemData key;
+  final TableData table;
+  _KeySuggestion({required this.key, required this.table});
+}
+
 class _KeyListScreenState extends State<KeyListScreen> {
   List<TableData> tables = [];
   final TextEditingController tableNameController = TextEditingController();
@@ -127,7 +134,7 @@ class _KeyListScreenState extends State<KeyListScreen> {
           TableData(
             newTable['nome'],
             getRandomColor(),
-            id: newTable['id'], // Adicione esta linha para armazenar o ID
+            id: newTable['id'],
           ),
         );
         tableNameController.clear();
@@ -173,15 +180,12 @@ class _KeyListScreenState extends State<KeyListScreen> {
   //DELETE TABLE
   void deleteTable(String tableId) async {
     try {
-      // Chamar API para deletar no backend
       await TableService.deleteTable(tableId);
 
-      // Atualizar a lista local removendo a tabela com o ID correspondente
       setState(() {
         tables.removeWhere((table) => table.id.toString() == tableId);
       });
 
-      // Mostrar mensagem de sucesso
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tabela deletada com sucesso')),
       );
@@ -229,7 +233,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
                         tabelaId: table.id!,
                       );
 
-                      // Crie uma NOVA lista ao invés de modificar a existente
                       final updatedKeys = [
                         KeyItemData(
                           _keynamecontroller.text.trim(),
@@ -239,7 +242,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
                       ];
 
                       setState(() {
-                        // Atualize a tabela com a nova lista de chaves
                         tables =
                             tables.map((t) {
                               return t.id == table.id
@@ -297,6 +299,21 @@ class _KeyListScreenState extends State<KeyListScreen> {
         ),
       );
     }
+  }
+
+  // SUGESTÕES DE CHAVES (AUTOCOMPLETE)
+  List<_KeySuggestion> get keySuggestions {
+    final search = searchController.text.trim().toLowerCase();
+    if (search.isEmpty) return [];
+    final suggestions = <_KeySuggestion>[];
+    for (final table in tables) {
+      for (final key in table.keys) {
+        if (key.name.toLowerCase().contains(search)) {
+          suggestions.add(_KeySuggestion(key: key, table: table));
+        }
+      }
+    }
+    return suggestions;
   }
 
   List<TableData> get filteredTables {
@@ -363,21 +380,55 @@ class _KeyListScreenState extends State<KeyListScreen> {
                 onFilterChanged:
                     (value) => setState(() => _filterOption = value),
               ),
+              // SUGESTÕES DE CHAVES (AUTOCOMPLETE)
+              if (keySuggestions.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 8, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF232323),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: keySuggestions.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white12),
+                    itemBuilder: (context, i) {
+                      final suggestion = keySuggestions[i];
+                      return ListTile(
+                        leading: const Icon(Icons.vpn_key, color: Colors.white54),
+                        title: Text(
+                          suggestion.key.name,
+                          style: GoogleFonts.inter(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          'Tabela: ${suggestion.table.name}',
+                          style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+                        ),
+                        onTap: () {
+                          onKeyTap(suggestion.key);
+                        },
+                      );
+                    },
+                  ),
+                ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView.builder(
-                  itemCount: filteredTables.length,
-                  itemBuilder: (context, tableIndex) {
-                    final table = filteredTables[tableIndex];
-                    return KeyTableExpansion(
-                      table: table,
-                      onEditTable: (id, newName) => _editTable(id, newName),
-                      onDeleteTable: deleteTable,
-                      onAddKey: addKey,
-                      onKeyTap: onKeyTap,
-                    );
-                  },
-                ),
+                child: keySuggestions.isNotEmpty
+                    ? const SizedBox.shrink()
+                    : ListView.builder(
+                        itemCount: filteredTables.length,
+                        itemBuilder: (context, tableIndex) {
+                          final table = filteredTables[tableIndex];
+                          return KeyTableExpansion(
+                            table: table,
+                            onEditTable: (id, newName) => _editTable(id, newName),
+                            onDeleteTable: deleteTable,
+                            onAddKey: addKey,
+                            onKeyTap: onKeyTap,
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -386,3 +437,5 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 }
+
+
