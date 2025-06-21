@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../service/item_service.dart';
+import 'package:printing/printing.dart';
+import '../service/pdf_export_service.dart';
 
 class Debouncer {
   final int milliseconds;
@@ -166,13 +168,6 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
     );
   }
 
-  // _buildPropertyTile(
-  // 'Valor Cobrado',
-  // itemData['valorCobrado']?.toString(),
-  // Icons.attach_money,
-  // isMonetary: true,
-  // ),
-
   // E atualize o método _buildPropertyTile:
   Widget _buildPropertyTile(
     String label,
@@ -315,13 +310,56 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
           IconButton(
             icon: const Icon(Icons.share, color: Colors.white),
             onPressed: () async {
-              // Implementar lógica para exportar pdf
+              final itemData = await _itemDetails;
+
+              try {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Gerando PDF...'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+
+                // Pré-processamento dos dados para garantir valores padrão
+                final processedData = {
+                  'Transponder': itemData['transponder'],
+                  'Tipo de Serviço': itemData['tipoServico'],
+                  'Valor Cobrado': itemData['valorCobrado']?.toStringAsFixed(2),
+                  'Marca do Veículo': itemData['marcaVeiculo'],
+                  'Modelo do Veículo': itemData['modeloVeiculo'],
+                  'Ano do Veículo': itemData['anoVeiculo'],
+                  'Tipo de Chave': itemData['tipoChave'],
+                  'Fornecedor': itemData['fornecedor'],
+                  'Data de Construção': itemData['dataConstrucao'],
+                  'Observações': itemData['observacoes'],
+                };
+
+                await PdfExportService.exportKeyDetailsToPdf(
+                  context: context,
+                  keyName: widget.keyName,
+                  keyDetails: processedData,
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('PDF gerado com sucesso!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erro ao gerar PDF: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              }
             },
-          ),
-          //Botão deletar chave
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: _showDeleteDialog,
           ),
         ],
       ),
@@ -391,7 +429,10 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
                     _buildPropertyTile(
                       'Valor Cobrado',
                       itemData['valorCobrado'] != null
-                          ? itemData['valorCobrado'].toString().replaceAll('.', ',')
+                          ? itemData['valorCobrado'].toString().replaceAll(
+                            '.',
+                            ',',
+                          )
                           : null,
                       Icons.attach_money,
                       isMonetary: true,
