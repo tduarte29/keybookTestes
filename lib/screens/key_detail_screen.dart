@@ -393,6 +393,11 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
         backgroundColor: const Color(0xFF232323),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          //Botão deletar chave
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: _showDeleteDialog,
+          ),
           //Botão exportar página em pdf
           IconButton(
             icon: const Icon(Icons.share, color: Colors.white),
