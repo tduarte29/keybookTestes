@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../service/item_service.dart';
-import 'package:printing/printing.dart';
 import '../service/pdf_export_service.dart';
 
 class Debouncer {
@@ -220,14 +217,15 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
     _debounce.run(() async {
       try {
         await _saveChanges();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$label atualizado com sucesso'),
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        }
+        // Feedback se salvou ou não, era muito chato então comentei
+        // if (mounted) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     SnackBar(
+        //       content: Text('$label atualizado com sucesso'),
+        //       duration: const Duration(seconds: 1),
+        //     ),
+        //   );
+        // }
       } catch (e) {
         debugPrint('Erro ao atualizar $label: $e');
         if (mounted) {
@@ -252,6 +250,24 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
     final itemData = await _itemDetails;
 
     try {
+      // Formata a data de construção se existir
+      String? formattedDate;
+      if (_controllers['Data de Construção']?.text.isNotEmpty ?? false) {
+        final dateText = _controllers['Data de Construção']!.text;
+        // Verifica se já está no formato correto (yyyy-MM-dd)
+        if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dateText)) {
+          // Converte de dd/MM/yyyy para yyyy-MM-dd se necessário
+          final parts = dateText.split('/');
+          if (parts.length == 3) {
+            formattedDate = '${parts[2]}-${parts[1]}-${parts[0]}';
+          } else {
+            formattedDate = dateText; // Tenta enviar como está
+          }
+        } else {
+          formattedDate = dateText;
+        }
+      }
+
       await ItemService().updateItem(
         itemId: widget.itemId,
         nome: _controllers['Nome']?.text ?? itemData['nome'],
@@ -263,7 +279,8 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
             _controllers['Ano do Veículo']?.text ?? itemData['anoVeiculo'],
         valorCobrado: _parseValorCobrado(
           _controllers['Valor Cobrado']?.text ??
-              itemData['valorCobrado']!.toString(),
+              itemData['valorCobrado']?.toString() ??
+              '',
         ),
         marcaVeiculo:
             _controllers['Marca do Veículo']?.text ?? itemData['marcaVeiculo'],
@@ -272,9 +289,7 @@ class _KeyDetailScreenState extends State<KeyDetailScreen> {
             itemData['modeloVeiculo'],
         tipoChave: _controllers['Tipo de Chave']?.text ?? itemData['tipoChave'],
         fornecedor: _controllers['Fornecedor']?.text ?? itemData['fornecedor'],
-        dataConstrucao:
-            _controllers['Data de Construção']?.text ??
-            itemData['dataConstrucao'],
+        dataConstrucao: formattedDate ?? itemData['dataConstrucao'],
         observacoes: _obsController.text,
       );
     } catch (e) {
