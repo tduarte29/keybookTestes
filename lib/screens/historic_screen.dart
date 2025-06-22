@@ -27,8 +27,7 @@ class HistoricScreen extends StatelessWidget {
               // Histórico de exportações (PDFs)
               GestureDetector(
                 onTap: () {
-                  // TODO: Implementar navegação para lista de PDFs exportados
-                  // Aqui você vai mostrar os PDFs de chaves recentemente importados do backend
+                  
                 },
                 child: Container(
                   width: double.infinity,

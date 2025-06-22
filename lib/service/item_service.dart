@@ -141,4 +141,56 @@ class ItemService {
       throw Exception('Failed to update item: ${response.statusCode}');
     }
   }
+
+  Future<List<String>> getFieldSuggestions(
+    String fieldName,
+    String query,
+  ) async {
+    try {
+      // Log 1: Antes da requisição
+      debugPrint(
+        '🔍 Buscando sugestões para campo "$fieldName" com query: "$query"',
+      );
+      debugPrint(
+        '📡 URL: $baseUrl/items/suggestions?field=$fieldName&query=$query',
+      );
+
+      final headers = await AuthService.headers;
+      debugPrint('🔑 Headers: $headers');
+
+      final response = await http.get(
+        Uri.parse(
+          '$baseUrl/items/suggestions?field=$fieldName&query=${Uri.encodeQueryComponent(query)}',
+        ),
+        headers: headers,
+      );
+
+      // Log 2: Resposta bruta
+      debugPrint('📥 Resposta recebida - Status: ${response.statusCode}');
+      debugPrint('📦 Corpo da resposta: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+
+        // Log 3: Dados convertidos
+        debugPrint('✅ Dados decodificados: $data');
+
+        final suggestions = data.cast<String>();
+        debugPrint('🔄 ${suggestions.length} sugestões encontradas');
+
+        return suggestions;
+      } else {
+        debugPrint('❌ Erro HTTP: ${response.statusCode}');
+        throw Exception(
+          'Failed to load suggestions. Status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      debugPrint('‼️ Erro ao buscar sugestões: $e');
+      if (kDebugMode) {
+        print('Error getting suggestions: $e');
+      }
+      return [];
+    }
+  }
 }
