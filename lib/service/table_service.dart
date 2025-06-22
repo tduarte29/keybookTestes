@@ -3,12 +3,13 @@ import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
 class TableService {
-  static const String _baseUrl = 'http://localhost:8080/tables';
+  // static const String _baseUrl = 'http://localhost:8080';
+  static const String _baseUrl = 'http://10.0.2.2:8080';
 
   // Listar todas as tabelas do usuário
   static Future<List<dynamic>> getUserTables(String userId) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8080/users/$userId/tables'),
+      Uri.parse('$_baseUrl/users/$userId/tables'),
       headers: await AuthService.headers,
     );
     if (response.statusCode == 200) {
@@ -24,7 +25,7 @@ class TableService {
     String tableName,
   ) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8080/users/$userId/tables'),
+      Uri.parse('$_baseUrl/users/$userId/tables'),
       headers: await AuthService.headers,
       body: jsonEncode({'nome': tableName}),
     );
@@ -39,7 +40,7 @@ class TableService {
 
   static Future<List<dynamic>> getTableItems(String tableId) async {
     final response = await http.get(
-      Uri.parse('$_baseUrl/$tableId/items'),
+      Uri.parse('$_baseUrl/tables/$tableId/items'),
       headers: await AuthService.headers,
     );
 
@@ -50,11 +51,10 @@ class TableService {
     }
   }
 
-
   // Renomear tabela - Corrigido para usar 'nome' ao invés de 'name'
   static Future<void> renameTable(String tableId, String newName) async {
     final response = await http.put(
-      Uri.parse('$_baseUrl/$tableId'),
+      Uri.parse('$_baseUrl/tables/$tableId'),
       headers: await AuthService.headers,
       body: jsonEncode({'nome': newName}), // Alterado para 'nome'
     );
@@ -70,7 +70,7 @@ class TableService {
   // Excluir tabela
   static Future<void> deleteTable(String tableId) async {
     final response = await http.delete(
-      Uri.parse('$_baseUrl/$tableId'),
+      Uri.parse('$_baseUrl/tables/$tableId'),
       headers: await AuthService.headers,
     );
 
@@ -78,6 +78,4 @@ class TableService {
       throw Exception('Erro ao excluir tabela: ${response.statusCode}');
     }
   }
-
-
 }
