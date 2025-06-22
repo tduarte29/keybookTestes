@@ -2,10 +2,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/table_data.dart';
+import '../service/item_service.dart';
 import '../widgets/key_table_expansion.dart';
 import '../widgets/table_name_input.dart';
 import '../widgets/search_filter_bar.dart';
 import 'key_detail_screen.dart';
+import '../service/table_service.dart';
+import '../service/auth_service.dart';
 
 class KeyListScreen extends StatefulWidget {
   const KeyListScreen({super.key});
@@ -14,11 +17,20 @@ class KeyListScreen extends StatefulWidget {
   State<KeyListScreen> createState() => _KeyListScreenState();
 }
 
+// Classe auxiliar para sugestão de chave
+class _KeySuggestion {
+  final KeyItemData key;
+  final TableData table;
+  _KeySuggestion({required this.key, required this.table});
+}
+
 class _KeyListScreenState extends State<KeyListScreen> {
-  late List<TableData> tables;
+  List<TableData> tables = [];
   final TextEditingController tableNameController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
   int _filterOption = 0;
+  int? userId;
+  bool _isLoading = true;
 
   Color getRandomColor() {
     final random = Random();
@@ -30,92 +42,308 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 
-  void addTable() {
-    final name = tableNameController.text.trim();
-    if (name.isNotEmpty) {
-      setState(() {
-        tables.add(TableData(name, getRandomColor()));
-        tableNameController.clear();
-      });
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAndTables();
+  }
+
+  Future<void> _loadUserAndTables() async {
+    try {
+      userId = await AuthService.getUserId();
+      print('UserId obtido: $userId');
+
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Usuário não autenticado')),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+        return;
+      }
+
+      await _loadTables();
+    } catch (e) {
+      print('Erro ao carregar dados: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar dados: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  void editTable(int index, String newName) {
-    setState(() {
-      tables[index] = TableData(newName, tables[index].color, tables[index].keys);
-    });
+  Future<void> _loadTables() async {
+    if (userId == null) return;
+
+    try {
+      final list = await TableService.getUserTables(userId!.toString());
+
+      final loadedTables = await Future.wait(
+        list.map((tableData) async {
+          final items = await TableService.getTableItems(
+            tableData['id'].toString(),
+          );
+
+          final keys =
+              items
+                  .map<KeyItemData>(
+                    (item) => KeyItemData(
+                      item['nome'],
+                      id: item['id'],
+                      valorCobrado: item['valorCobrado']?.toDouble(),
+                      modeloVeiculo: item['modeloVeiculo'],
+                    ),
+                  )
+                  .toList();
+
+          return TableData(
+            tableData['nome'],
+            getRandomColor(),
+            id: tableData['id'],
+            keys: keys,
+            dataCriacao: tableData['dataCriacao'] != null
+                ? DateTime.tryParse(tableData['dataCriacao'])
+                : null,
+          );
+        }),
+      );
+
+      setState(() => tables = loadedTables);
+    } catch (e) {
+      print('Erro ao carregar tabelas: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar tabelas: ${e.toString()}')),
+        );
+      }
+    }
   }
 
-  void deleteTable(int index) {
-    setState(() {
-      tables.removeAt(index);
-    });
+  //CREATE TABLE
+  void addTable() async {
+    final name = tableNameController.text.trim();
+    if (name.isEmpty || userId == null) return;
+
+    try {
+      final newTable = await TableService.createTable(userId!.toString(), name);
+      setState(() {
+        tables.add(
+          TableData(
+            newTable['nome'],
+            getRandomColor(),
+            id: newTable['id'],
+          ),
+        );
+        tableNameController.clear();
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao criar tabela: ${e.toString()}')),
+        );
+      }
+    }
   }
 
+  //UPDATE
+  Future<void> _editTable(String tableId, String newName) async {
+    try {
+      print('Tentando renomear tabela $tableId para $newName');
+      await TableService.renameTable(tableId, newName);
+
+      setState(() {
+        final index = tables.indexWhere((t) => t.id.toString() == tableId);
+        if (index != -1) {
+          tables[index] = TableData(
+            newName,
+            tables[index].color,
+            keys: tables[index].keys,
+            id: tables[index].id,
+          );
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tabela renomeada com sucesso')),
+      );
+    } catch (e) {
+      print('Erro ao editar tabela: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao editar tabela: ${e.toString()}')),
+      );
+    }
+  }
+
+  //DELETE TABLE
+  void deleteTable(String tableId) async {
+    try {
+      await TableService.deleteTable(tableId);
+
+      setState(() {
+        tables.removeWhere((table) => table.id.toString() == tableId);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tabela deletada com sucesso')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao deletar tabela: ${e.toString()}')),
+      );
+    }
+  }
+
+  //CREATE KEY
   void addKey(TableData table) {
-    final controller = TextEditingController();
+    final _keynamecontroller = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF232323),
-        title: Text('Nova chave', style: GoogleFonts.inter(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: GoogleFonts.inter(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Nome da chave',
-            hintStyle: GoogleFonts.inter(color: Colors.white54),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFF232323),
+            title: Text(
+              'Nova chave',
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
+            content: TextField(
+              controller: _keynamecontroller,
+              style: GoogleFonts.inter(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Nome da chave',
+                hintStyle: GoogleFonts.inter(color: Colors.white54),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancelar',
+                  style: GoogleFonts.inter(color: Colors.white70),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_keynamecontroller.text.trim().isNotEmpty) {
+                    try {
+                      final newItem = await ItemService().createItem(
+                        nome: _keynamecontroller.text.trim(),
+                        tabelaId: table.id!,
+                      );
+
+                      final updatedKeys = [
+                        KeyItemData(
+                          _keynamecontroller.text.trim(),
+                          id: newItem['id'],
+                        ),
+                        ...table.keys,
+                      ];
+
+                      setState(() {
+                        tables =
+                            tables.map((t) {
+                              return t.id == table.id
+                                  ? TableData(
+                                    t.name,
+                                    t.color,
+                                    keys: updatedKeys,
+                                    id: t.id,
+                                  )
+                                  : t;
+                            }).toList();
+                      });
+
+                      Navigator.pop(context);
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Erro ao criar chave: ${e.toString()}',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+                child: Text(
+                  'OK',
+                  style: GoogleFonts.inter(color: Colors.grey.shade900),
+                ),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: GoogleFonts.inter(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                setState(() {
-                  table.keys.insert(0, KeyItemData(controller.text.trim()));
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: Text('OK', style: GoogleFonts.inter(color: Colors.grey.shade900)),
-          ),
-        ],
-      ),
     );
   }
 
-  void onKeyTap(String keyName) {
-    Navigator.push(
+  void onKeyTap(KeyItemData keyItem) async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => KeyDetailScreen(keyName: keyName),
+        builder: (_) => KeyDetailScreen(keyName: keyItem.name, itemId: keyItem.id!),
       ),
     );
+
+    // Sempre atualiza a lista ao voltar da tela de detalhes
+    await _loadTables();
+
+    // Se deletou, mostra feedback visual
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chave deletada com sucesso'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  // SUGESTÕES DE CHAVES (AUTOCOMPLETE)
+  List<_KeySuggestion> get keySuggestions {
+    final search = searchController.text.trim().toLowerCase();
+    if (search.isEmpty) return [];
+    final suggestions = <_KeySuggestion>[];
+    for (final table in tables) {
+      for (final key in table.keys) {
+        if (key.name.toLowerCase().contains(search)) {
+          suggestions.add(_KeySuggestion(key: key, table: table));
+        }
+      }
+    }
+    return suggestions;
   }
 
   List<TableData> get filteredTables {
     String search = searchController.text.trim().toLowerCase();
-    List<TableData> filtered = tables
-        .where((t) => t.name.toLowerCase().contains(search) || t.keys.any((k) => k.name.toLowerCase().contains(search)))
-        .toList();
+    List<TableData> filtered =
+        tables
+            .where(
+              (t) =>
+                  t.name.toLowerCase().contains(search) ||
+                  t.keys.any((k) => k.name.toLowerCase().contains(search)),
+            )
+            .toList();
 
     switch (_filterOption) {
-      case 0:
+      case 0: // Ordem Alfabética (A-Z)
         filtered.sort((a, b) => a.name.compareTo(b.name));
         break;
-      case 1:
+      case 1: // Ordem Alfabética (Z-A)
         filtered.sort((a, b) => b.name.compareTo(a.name));
         break;
-      case 2:
+      case 2: // Mais Recentes
+        filtered.sort((a, b) =>
+          (b.dataCriacao ?? DateTime(0)).compareTo(a.dataCriacao ?? DateTime(0)));
         break;
-      case 3:
-        filtered = filtered.reversed.toList();
-        break;
-      case 4:
+      case 3: // Mais Antigas
+        filtered.sort((a, b) =>
+          (a.dataCriacao ?? DateTime(0)).compareTo(b.dataCriacao ?? DateTime(0)));
         break;
     }
     return filtered;
@@ -126,25 +354,6 @@ class _KeyListScreenState extends State<KeyListScreen> {
     tableNameController.dispose();
     searchController.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    tables = [
-      TableData('Chevrolet', Colors.redAccent, [
-        KeyItemData('BSD12931'),
-        KeyItemData('DSS36472'),
-        KeyItemData('ABC12345'),
-      ]),
-      TableData('Honda', Colors.blueAccent),
-      TableData('Mercedes', Colors.green),
-      TableData('Ferrari', Colors.red, [
-        KeyItemData('BSD12931'),
-        KeyItemData('DSS36472'),
-        KeyItemData('XYZ98765'),
-      ]),
-    ];
   }
 
   @override
@@ -166,33 +375,64 @@ class _KeyListScreenState extends State<KeyListScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              TableNameInput(
-                controller: tableNameController,
-                onAdd: addTable,
-              ),
+              TableNameInput(controller: tableNameController, onAdd: addTable),
               const SizedBox(height: 12),
               SearchFilterBar(
                 controller: searchController,
                 filterOption: _filterOption,
                 onChanged: (_) => setState(() {}),
-                onFilterChanged: (value) => setState(() => _filterOption = value),
+                onFilterChanged:
+                    (value) => setState(() => _filterOption = value),
               ),
+              // SUGESTÕES DE CHAVES (AUTOCOMPLETE)
+              if (keySuggestions.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 8, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF232323),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: keySuggestions.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white12),
+                    itemBuilder: (context, i) {
+                      final suggestion = keySuggestions[i];
+                      return ListTile(
+                        leading: const Icon(Icons.vpn_key, color: Colors.white54),
+                        title: Text(
+                          suggestion.key.name,
+                          style: GoogleFonts.inter(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          'Tabela: ${suggestion.table.name}',
+                          style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+                        ),
+                        onTap: () {
+                          onKeyTap(suggestion.key);
+                        },
+                      );
+                    },
+                  ),
+                ),
               const SizedBox(height: 16),
               Expanded(
-                child: ListView(
-                  children: filteredTables.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final table = entry.value;
-                    return KeyTableExpansion(
-                      table: table,
-                      index: index,
-                      onEditTable: editTable,
-                      onDeleteTable: deleteTable,
-                      onAddKey: addKey,
-                      onKeyTap: onKeyTap,
-                    );
-                  }).toList(),
-                ),
+                child: keySuggestions.isNotEmpty
+                    ? const SizedBox.shrink()
+                    : ListView.builder(
+                        itemCount: filteredTables.length,
+                        itemBuilder: (context, tableIndex) {
+                          final table = filteredTables[tableIndex];
+                          return KeyTableExpansion(
+                            table: table,
+                            onEditTable: (id, newName) => _editTable(id, newName),
+                            onDeleteTable: deleteTable,
+                            onAddKey: addKey,
+                            onKeyTap: onKeyTap,
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -201,3 +441,5 @@ class _KeyListScreenState extends State<KeyListScreen> {
     );
   }
 }
+
+

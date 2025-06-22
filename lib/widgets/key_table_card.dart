@@ -112,35 +112,3 @@ class KeyItemCard extends StatelessWidget {
     );
   }
 }
-
-// Exemplo de uso do KeyTableCard com os dados fornecidos
-class ExampleUsage extends StatelessWidget {
-  const ExampleUsage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Key Table Example'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            KeyTableCard(
-              label: 'Chevrolet',
-              labelColor: Colors.redAccent,
-              itemCount: 4,
-              keyItems: [
-                const AddKeyCard(), // <-- Botão de adicionar chave
-                KeyItemCard(keyName: 'BSD12931'),
-                KeyItemCard(keyName: 'DSS36472'),
-                KeyItemCard(keyName: 'ABC12345'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
