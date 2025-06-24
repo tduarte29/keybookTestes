@@ -5,14 +5,14 @@ class TableData {
   final Color color;
   final List<KeyItemData> keys;
   final int? id;
-  final DateTime? dataCriacao; // <-- Adicione isso
+  final DateTime? dataCriacao;
 
   TableData(
     this.name,
     this.color, {
     this.keys = const [],
     this.id,
-    this.dataCriacao, // <-- Adicione isso
+    this.dataCriacao,
   });
 
   // Adicione um método para atualizar chaves

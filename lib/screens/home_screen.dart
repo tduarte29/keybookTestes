@@ -5,7 +5,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../widgets/current_location_map.dart';
 
-// TELA PRINCIPAL
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -15,7 +14,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String? _location;
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -75,23 +75,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final pos = await Geolocator.getCurrentPosition();
     setState(() {
-      _location = '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+      _location =
+          '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
     });
   }
 
   Future<void> _showNotification() async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'default_channel',
-      'Notificações',
-      channelDescription: 'Canal padrão para notificações',
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-      color: Color(0xFF232323),
+          'default_channel',
+          'Notificações',
+          channelDescription: 'Canal padrão para notificações',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker',
+          color: Color(0xFF232323),
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
     );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
     await _notificationsPlugin.show(
       0,
       'PUSH NOTIFICATION',
@@ -110,26 +112,30 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showNotificationTip() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF232323),
-        title: Text(
-          'Dica',
-          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Se a notificação não aparecer:\n\n'
-          '- Certifique-se de que a permissão de notificação está ativada nas configurações do app.\n'
-          '- Em alguns celulares, pode ser necessário ativar manualmente.\n'
-          '- Em emuladores, notificações podem não funcionar corretamente.',
-          style: GoogleFonts.inter(color: Colors.white70, fontSize: 15),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: GoogleFonts.inter(color: Colors.blue)),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: const Color(0xFF232323),
+            title: Text(
+              'Dica',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Se a notificação não aparecer:\n\n'
+              '- Certifique-se de que a permissão de notificação está ativada nas configurações do app.\n'
+              '- Em alguns celulares, pode ser necessário ativar manualmente.\n'
+              '- Em emuladores, notificações podem não funcionar corretamente.',
+              style: GoogleFonts.inter(color: Colors.white70, fontSize: 15),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK', style: GoogleFonts.inter(color: Colors.blue)),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 

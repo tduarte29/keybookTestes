@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// TELA PRINCIPAL
 class HistoricScreen extends StatelessWidget {
   const HistoricScreen({super.key});
 
@@ -26,10 +25,7 @@ class HistoricScreen extends StatelessWidget {
               const SizedBox(height: 16),
               // Histórico de exportações (PDFs)
               GestureDetector(
-                onTap: () {
-                  // TODO: Implementar navegação para lista de PDFs exportados
-                  // Aqui você vai mostrar os PDFs de chaves recentemente importados do backend
-                },
+                onTap: () {},
                 child: Container(
                   width: double.infinity,
                   height: 160,
@@ -57,7 +53,9 @@ class HistoricScreen extends StatelessWidget {
                           child: Text(
                             'Nenhum PDF exportado ainda.',
                             style: GoogleFonts.inter(
-                                color: Colors.white54, fontSize: 14),
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ),
@@ -101,7 +99,9 @@ class HistoricScreen extends StatelessWidget {
                           child: Text(
                             'Nenhuma modificação recente.',
                             style: GoogleFonts.inter(
-                                color: Colors.white54, fontSize: 14),
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ),
