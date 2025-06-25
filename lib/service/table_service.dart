@@ -4,7 +4,7 @@ import 'auth_service.dart';
 
 class TableService {
   // static const String _baseUrl = 'http://localhost:8080';
-  static const String _baseUrl = 'http://10.0.2.2:8080';
+  static const String _baseUrl = 'https://keybook-production.up.railway.app';
 
   // Listar todas as tabelas do usuário
   static Future<List<dynamic>> getUserTables(String userId) async {
