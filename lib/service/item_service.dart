@@ -5,7 +5,7 @@ import 'auth_service.dart'; // Adicione esta importação
 
 class ItemService {
   // final String baseUrl = 'http://127.0.0.1:8080'; // Remova a barra no final
-  final String baseUrl = 'http://10.0.2.2:8080';
+  final String baseUrl = 'https://keybook-production.up.railway.app';
 
   Future<Map<String, dynamic>> createItem({
     required String nome,
