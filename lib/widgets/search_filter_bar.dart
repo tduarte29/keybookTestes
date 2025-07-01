@@ -86,20 +86,20 @@ class SearchFilterBar extends StatelessWidget {
                 ),
               ),
               PopupMenuItem(
-                value: 2,
+                value: 2, 
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                    const Icon(Icons.access_time, color: Colors.white, size: 18),
                     const SizedBox(width: 8),
                     Text('Mais Recentes', style: GoogleFonts.inter(color: Colors.white)),
                   ],
                 ),
               ),
               PopupMenuItem(
-                value: 3,
+                value: 3, 
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                    const Icon(Icons.history, color: Colors.white, size: 18),
                     const SizedBox(width: 8),
                     Text('Mais Antigas', style: GoogleFonts.inter(color: Colors.white)),
                   ],
