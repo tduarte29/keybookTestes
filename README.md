@@ -30,7 +30,7 @@
 
 ## 🚀 Como Instalar
 
-1.  Baixe o arquivo `keybook.apk` para o seu celular Android.
+1.  Baixe o arquivo `keybook.apk` nos releases para o seu celular Android.
 2.  Abra o arquivo baixado.
 3.  Seu celular pode pedir permissão para instalar aplicativos de "fontes desconhecidas". **Permita** a instalação para continuar.
 4.  Siga as instruções na tela e pronto! O Keybook estará instalado.
