@@ -1,6 +1,6 @@
 # 🔑 Keybook
 
-### _Seu registro de modelos de chaves digital seguro e elegante._
+### _Seu registro de modelos de chaves digital prático e elegante._
 
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.x-blue?style=for-the-badge&logo=flutter" alt="Flutter Version">
